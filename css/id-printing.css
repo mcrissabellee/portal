@@ -1,0 +1,33 @@
+/* ID Printing shares the service-wizard controls and palette with Grade Slip. */
+.dashboard-shell[data-current-page="id-printing"] .dashboard-main { padding: 32px 32px 40px; background: #fff; }
+.id-printing-view .grade-slip-card { width: 100%; }
+.id-printing-view .grade-slip-card:has(#id-printing-personal:not([hidden])) { padding-top: 0; }
+.id-printing-view .grade-slip-fields, .id-printing-view .grade-slip-actions, .id-printing-review-grid { max-width: 672px; }
+.id-printing-view .grade-slip-review-banner { margin-bottom: 24px; }
+.id-printing-view .grade-slip-review-banner::before { top: -4px; bottom: -4px; }
+.id-printing-view .grade-slip-review-banner h3 { padding-left: 45px; line-height: 1.2; }
+.id-printing-view .grade-slip-review-banner h3 .portal-icon { position: absolute; top: 0; left: 0; width: 34px; height: 34px; }
+.id-printing-view .grade-slip-review-intro { margin-left: 45px; }
+.id-printing-view .grade-slip-review-layout { min-height: 240px; }
+.id-printing-view .grade-slip-card:has(#id-printing-review:not([hidden])) .grade-slip-actions { max-width: none; margin-top: 28px; }
+.id-printing-view .grade-slip-card:has(#id-printing-review:not([hidden])) #id-printing-back { min-height: 34px; padding: 5px 12px; border: 1px solid #3b4859; border-radius: 2px; background: #edf4ff; color: #07396e; font-size: 16px; }
+.id-printing-schedule-content { max-width: 672px; }
+.id-printing-view .grade-slip-enrollment-fields { max-width: 520px; }
+.id-printing-view .grade-slip-request-options > .grade-slip-field { margin-top: 16px; }
+#id-printing-submit { min-height: 40px; padding: 8px 22px; border-radius: 2px; background: #50c000; color: #07396e; font-size: 17px; font-weight: 700; }
+#id-printing-submit:hover { background: #43a200; }
+html[data-theme="dark"] .dashboard-shell[data-current-page="id-printing"] .dashboard-main { background: var(--theme-canvas); }
+.dashboard-shell[data-current-page="id-printing-complete"] :is(.dashboard-sidebar, .sidebar-overlay, .sidebar-toggle) { display: none; }
+.dashboard-shell[data-current-page="id-printing-complete"] .dashboard-main { margin-left: 0; padding: 60px 24px 48px; background: #fff; }
+html[data-theme="dark"] .dashboard-shell[data-current-page="id-printing-complete"] .dashboard-main { background: var(--theme-canvas); }
+.id-printing-view .grade-slip-workspace:has(#id-printing-review:not([hidden])) .grade-slip-assistant { bottom: 190px; }
+
+@media (max-width: 1250px) {
+  .id-printing-view .grade-slip-workspace:has(#id-printing-review:not([hidden])) .grade-slip-assistant { bottom: auto; }
+}
+
+@media (max-width: 700px) {
+  .dashboard-shell[data-current-page="id-printing-complete"] .dashboard-main { padding: 38px 18px; }
+  .dashboard-shell[data-current-page="id-printing"] .dashboard-main { padding: 24px 16px 32px; }
+  .id-printing-view .grade-slip-review-layout { min-height: 0; }
+}

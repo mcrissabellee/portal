@@ -31,6 +31,8 @@ Bootstrap loads from jsDelivr. The page also includes local styling for its core
 - Expandable Services navigation with separate Grade Slip, Registration Form, and ID Printing pages and active-service indicators.
 - Three-step Grade Slip form with profile-prefilled information, validation, progress, account-specific draft autosave, and request review.
 - Grade Slip pick-up schedule confirmation with YES/NO actions and a dedicated Schedule Complete screen.
+- Reference-style three-step ID Printing form with profile-prefilled personal information, printing schedule, request review, and account-specific draft autosave.
+- ID Printing YES/NO schedule confirmation and a dedicated Schedule Complete screen showing the confirmed date and time.
 - Responsive mobile navigation and document request dialogs.
 - Individual URL routes with direct links and browser Back/Forward navigation.
 - A separate HTML file for every route, plus reusable shared layout, icons, and dialogs.
@@ -49,8 +51,10 @@ pages/dashboard.html           Dashboard route
 pages/services.html            Academic Services route
 pages/grade-slip.html          Grade Slip service route
 pages/grade-slip-complete.html Grade Slip Schedule Complete route
-pages/registration-form.html   Registration Form service route
+pages/registration-form.html   Registration Form three-step service route
+pages/registration-form-complete.html Registration Form Schedule Complete route
 pages/id-printing.html         ID Printing service route
+pages/id-printing-complete.html ID Printing Schedule Complete route
 pages/my-request.html          My Request route
 pages/academic-records.html     Academic Records route
 pages/announcements.html        Announcement route
@@ -63,6 +67,8 @@ components/dialogs.html        Request, schedule confirmation, assistant, recove
 css/style.css                  Reference-inspired design and responsive styles
 css/dashboard.css              Dashboard layout, cards, and mobile navigation
 css/grade-slip.css             Grade Slip multi-step form layout and theme styles
+css/registration-form.css      Registration Form blue workspace and inline assistant
+css/id-printing.css            ID Printing layout using shared service-wizard styles
 css/theme.css                  Dark-mode colors for dashboard views, settings, and dialogs
 js/accounts.js                 Saved demo accounts, password hashing, and sign-in sessions
 js/app.js                      Route-to-file map, HTML loading, and app initialization
@@ -70,6 +76,8 @@ js/script.js                   Registration, sign-in, role switching, and accoun
 js/dashboard.js                Dashboard navigation, request previews, assistant, and logout
 js/settings.js                 Settings sections, account editing, password changes, and preferences
 js/grade-slip.js               Grade Slip steps, validation, saved drafts, and submission
+js/registration-form.js        Registration steps, account-scoped drafts, requests, and chat
+js/id-printing.js              ID Printing steps, profile sync, saved drafts, and submission
 assets/images/assistant.svg    Robot illustration
 assets/images/rtu-logo.png      Rizal Technological University seal
 ```
@@ -107,7 +115,9 @@ Each page has its own hash route and source file:
 | Grade Slip | `#/services/grade-slip` | `pages/grade-slip.html` |
 | Schedule Complete | `#/services/grade-slip/complete` | `pages/grade-slip-complete.html` |
 | Registration Form | `#/services/registration-form` | `pages/registration-form.html` |
+| Registration Form Schedule Complete | `#/services/registration-form/complete` | `pages/registration-form-complete.html` |
 | ID Printing | `#/services/id-printing` | `pages/id-printing.html` |
+| ID Printing Schedule Complete | `#/services/id-printing/complete` | `pages/id-printing-complete.html` |
 | My Request | `#/my-request` | `pages/my-request.html` |
 | Academic Records | `#/academic-records` | `pages/academic-records.html` |
 | Announcement | `#/announcements` | `pages/announcements.html` |
@@ -121,13 +131,37 @@ Select **Services** in the sidebar to expand or collapse its **Grade Slip**, **R
 
 ### Grade Slip form
 
-The Grade Slip page follows the reference's blue form panel and three-step progress header:
+The Grade Slip page follows the reference's light-blue section headers, white form area, and three-step progress header:
 
 1. **Personal Information:** student number, full name, program, year level, and semester are prefilled from the signed-in account's profile. Student number is fixed; other values can be adjusted for this request. Long program names wrap and expand automatically. Changes here do not overwrite My Profile.
 2. **Grade Slip Details:** the reference-style Enrollment Details panel has academic-year and requested-semester dropdowns, a calendar appointment-date field, and a clock start-time field. Available hours are **8:00 AM–5:00 PM**, with start times limited to **8:00 AM–4:00 PM**. Choose or type a start time; the read-only end time is always calculated one hour later (for example, `8:00 AM → 9:00 AM`). The last appointment is **4:00 PM–5:00 PM**. Out-of-hours times cannot proceed to review or submission, including in restored drafts. The date must be today or later. Calendar/clock buttons open the browser's native pickers, and keyboard entry is supported. Expand **Additional request details** to change the default Personal copy purpose, 1–10 copies, or optional notes. The displayed 150-student capacity is reference/demo copy; the demo does not check live appointment availability.
-3. **Review & Submit:** review the personal details, requested academic year/semester, appointment date, calculated time range, and any additional details. **Submit request** opens a blurred-backdrop confirmation asking whether to proceed with the selected pick-up schedule. **NO**, Escape, or clicking outside returns to the review form without creating a request or clearing its draft. **YES** creates the demo request once and opens **Schedule Complete!**, showing a green check mark, the actual selected date/time, and the request reference. Use **Back to Dashboard** or **View My Request** to continue; **View request details** in My Request displays the submitted snapshot, including the appointment schedule.
+3. **Review & Submit:** the reference-style review shows student details on the left, academic-year/semester pills beneath them, and selected-date and calculated-time cards on the right. Expand **Additional request details** to review the purpose, copies, and notes. Check **I confirm that the information above is correct and complete**, then choose the green **Confirm Schedule** button to open a blurred-backdrop confirmation asking whether to proceed with the selected pick-up schedule. The checkbox must be checked again after returning from an earlier step, receiving updated profile information, or reloading a draft. **NO**, Escape, or clicking outside returns to the review form without creating a request or clearing its draft. **YES** creates the demo request once and opens **Schedule Complete!**, showing a green check mark, the actual selected date/time, and the request reference. Use **Back to Dashboard** or **View My Request** to continue; **View request details** in My Request displays the submitted snapshot, including the appointment schedule.
 
 The selected step and draft values autosave separately for each account in browser storage and survive navigation, refresh, and logout. Previously saved drafts retain their information when the new scheduling fields are added and return to Details if a required date/time is missing. Invalid drafts can be saved, but must be corrected before moving forward or confirming submission. A draft is cleared only after choosing YES and successfully creating its request, so the next Grade Slip request starts fresh. Submitted demo requests and their completion screen remain in memory for the current visit and are cleared on refresh or logout. A completion URL without a confirmed request returns to the Grade Slip form. The progress indicator, Next/Back controls, confirmation, success screen, assistant shortcut, and autosave footer work on mobile and in dark mode.
+
+### ID Printing form
+
+Open **Services → ID Printing** to use the reference-style three-step form. **Personal Information** prefills the student number, name, program, year level, and semester from the signed-in profile. The section heading has a full-width light-blue strip, and the fields retain their blue backgrounds. Student number is read-only; other edits apply to this request. Long program names wrap automatically.
+
+**Printing Schedule** collects the academic year, semester, printing date, and start time. The calendar and clock buttons open native pickers, with keyboard entry also supported. Dates must be today or later; start times run from **8:00 AM to 4:00 PM**, and the read-only end time is calculated one hour later, ending by **5:00 PM**. The 150-student capacity text follows the reference; the demo does not check live availability. Optional notes are available under **Additional request details**. **Review & Submit** shows student details beside the selected date/time cards. Expand **Additional request details** to review the academic year, requested semester, and notes. Confirm the information's accuracy and choose the green **Confirm Schedule** button beneath the review; a punctuality reminder appears below it.
+
+**Confirm Schedule** opens a light-blue YES/NO dialog with a blurred backdrop and the selected date/time. **NO**, Escape, or clicking outside returns to review and preserves the draft. **YES** revalidates the information, creates one demo request, and opens **Schedule Complete!** with a green check mark, the confirmed date/time, and **Back to Dashboard**. The completion screen hides the sidebar. The request appears in **My Request**, where its full snapshot includes the printing schedule. Drafts autosave separately from Grade Slip and separately for each account, survive refresh and navigation, and clear only after successfully confirming YES. Older enrollment-only drafts retain their values and return to Printing Schedule to supply a date and time. The checkbox is not restored from a saved draft. A completion URL without a confirmed request in the current session returns to the ID Printing form. The form, dialog, and completion screen support mobile layouts and dark mode.
+
+### Registration Form
+
+Open **Services → Registration Form** for the reference-inspired three-step workspace. **Personal Information** prefills student number, full name, program, year level, and semester from your profile. The student number is read-only; other edits apply only to this request. Program uses a dropdown and includes your saved profile's program even when it is not in the default options.
+
+**Enrollment Details** follows Grade Slip Details: a light-blue heading strip with the reference's 150-student capacity text, a white form area, academic-year and semester dropdowns, and calendar/clock appointment pickers. The date must be today or later. Start times are **8:00 AM–4:00 PM**, and the read-only end time is calculated one hour later, ending by **5:00 PM**. The capacity text is demo copy; live availability is not checked. Expand **Additional request details** to change the purpose, 1–10 copies, or optional notes.
+
+**Review & Submit** follows the reference's white workspace and light-blue heading strip. Student name, year level, student ID, current semester, and program appear on the left; the selected date's month, weekday, and day and the calculated time range appear in cards on the right. Expand **Additional request details** to review the academic year, requested semester, purpose, copies, and notes. The compact **RTU AI ASSISTANT** shortcut opens the existing assistant dialog. Check the information-confirmation box and choose the green **Confirm Schedule** button above the punctuality reminder. A light-blue YES/NO dialog with a blurred backdrop shows the selected date and time: **NO**, Escape, or clicking outside preserves the draft; **YES** revalidates it, creates one demo request, and opens **Schedule Complete!**.
+
+The completion screen hides the sidebar and shows the reference's large green check mark, success message, confirmed date/time card, request reference, and **Back to Dashboard** button. The request snapshot is available under **My Request**. Completion details stay in memory for the current visit and are cleared on refresh, logout, or account change. Opening the completion URL without a confirmed request returns to the Registration Form. The confirmation dialog and completion screen support mobile layouts and dark mode.
+
+Required fields and appointment hours are checked before advancing or confirming. The draft is saved separately for each account, independently of Grade Slip and ID Printing, and survives navigation, refresh, and logout. Older enrollment-only drafts retain their values and return to Enrollment Details to supply the new date and time. Drafts clear after a successful confirmation. The information-confirmation box must be checked again after editing or restoring a draft.
+
+The inline **RTU AI ASSISTANT** panel greets the signed-in student and answers questions using the portal's existing local keyword-based guidance. Conversation text stays in memory and resets on logout or account change. The blue workspace, form controls, assistant, progress indicator, and autosave footer support mobile layouts and dark mode.
+
+### Profile editing
 
 Click the name/avatar in the header to open the account dropdown, then select **My Profile**, **Settings**, or **Log out**. On mobile, tap the avatar. The dropdown closes when you select a page, click outside, move focus outside, or press Escape.
 

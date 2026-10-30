@@ -452,10 +452,8 @@ window.initializePortalDashboard = () => {
     if (request) requestDialog.close();
   });
 
-  function askAssistant(question) {
-    const query = question.trim();
-    if (!query) return;
-    const normalized = query.toLowerCase();
+  function assistantAnswer(question) {
+    const normalized = question.trim().toLowerCase();
     let answer;
     if (/status|track|my request/.test(normalized)) {
       answer = requests.length
@@ -463,15 +461,23 @@ window.initializePortalDashboard = () => {
         : "You have no requests in this session yet. Open Services to create a document request preview, then check My Request. Official processing status will be available when the portal is connected to the registrar.";
     } else if (/gradeslip|grade slip|grades/.test(normalized)) {
       answer = "Open Services and choose Grade Slip. Complete Personal Information and Grade Slip Details, then review and submit your demo request. It will appear in My Request. Contact the registrar to confirm official requirements, fees, and release schedules.";
+    } else if (/id printing|student id/.test(normalized)) {
+      answer = "Open Services and choose ID Printing. Complete Personal Information, then choose an academic year, semester, date, and time in Printing Schedule. Review your information, choose Confirm Schedule, and select YES to save your demo request. The Schedule Complete screen shows your selected date and time, and the request appears in My Request.";
     } else if (/regiform|registration|enroll/.test(normalized)) {
-      answer = "Open Services and select Registration Form. Choose the purpose of your request and create a request preview. For an official registration form, confirm your enrollment status and the current requirements with the RTU Pasig registrar.";
+      answer = "Open Services and select Registration Form. Check Personal Information, then select your academic year, semester, appointment date, and start time in Enrollment Details. The end time is calculated one hour later. Use Additional request details to change the purpose or copies, then Review & Submit to check your information. Choose Confirm Schedule and YES to create a demo request and open Schedule Complete with your selected date and time. Your draft saves automatically, and the confirmed request appears in My Request. For an official form, confirm your enrollment status and current requirements with the RTU Pasig registrar.";
     } else if (/transcript|\btor\b|\bcoe\b|certificate|record/.test(normalized)) {
       answer = "Open Academic Records to request a Transcript of Records (TOR), Certificate of Enrollment (COE), or gradeslip. Requirements, fees, and processing times depend on the document, so confirm the current details with the registrar.";
     } else {
       answer = "I can guide you through registration form requests, gradeslips, academic records, and checking your demo requests. Try asking “How can I request a regiform?” or open Services to choose a document.";
     }
+    return answer;
+  }
+
+  function askAssistant(question) {
+    const query = question.trim();
+    if (!query) return;
     document.querySelector("#assistant-question-text").textContent = query;
-    document.querySelector("#assistant-answer").textContent = answer;
+    document.querySelector("#assistant-answer").textContent = assistantAnswer(query);
     assistantDialog.showModal();
   }
 
@@ -508,6 +514,7 @@ window.initializePortalDashboard = () => {
   });
 
   window.PortalRequests = Object.freeze({ create: createRequest });
+  window.PortalAssistant = Object.freeze({ answer: assistantAnswer });
 
   const savedAccount = accounts.restoreSession();
   if (savedAccount) openDashboard(savedAccount);

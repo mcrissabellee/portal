@@ -16,6 +16,9 @@ window.initializeGradeSlip = () => {
   const backButton = document.querySelector("#grade-slip-back");
   const nextButton = document.querySelector("#grade-slip-next");
   const submitButton = document.querySelector("#grade-slip-submit");
+  const reviewConsent = document.querySelector("#grade-slip-confirm-information");
+  const reviewDate = document.querySelector("#grade-slip-review-date");
+  const reviewDisclaimer = document.querySelector("#grade-slip-review-disclaimer");
   const errorMessage = document.querySelector("#grade-slip-error");
   const saveMessage = document.querySelector("#grade-slip-save-message");
   const confirmation = document.querySelector("#grade-slip-confirmation");
@@ -175,10 +178,22 @@ window.initializeGradeSlip = () => {
 
   function renderReview() {
     const data = requestDetails();
-    const review = { ...data, appointmentDate: data.appointmentDateLabel, studentNumber: account?.accountNumber || "" };
+    const date = data.appointmentDateLabel ? new Date(`${data.appointmentDate}T12:00:00`) : null;
+    const review = {
+      ...data,
+      studentNumber: account?.accountNumber || "",
+      academicYearLabel: data.academicYear ? `A.Y. ${data.academicYear}` : "",
+      appointmentMonth: date?.toLocaleDateString(undefined, { month: "long", year: "numeric" }) || "",
+      appointmentWeekday: date?.toLocaleDateString(undefined, { weekday: "short" }) || "",
+      appointmentDay: date ? String(date.getDate()) : "",
+    };
     document.querySelectorAll("[data-grade-review]").forEach((element) => {
       element.textContent = review[element.dataset.gradeReview] || "None";
     });
+    reviewDate.dateTime = data.appointmentDate;
+    reviewDate.setAttribute("aria-label", data.appointmentDateLabel || "No date selected");
+    reviewConsent.checked = false;
+    reviewConsent.removeAttribute("aria-invalid");
   }
 
   function showStep(step, focus = false, save = true) {
@@ -199,6 +214,8 @@ window.initializeGradeSlip = () => {
     backButton.hidden = step === 1;
     nextButton.hidden = step === 3;
     submitButton.hidden = step !== 3;
+    reviewDisclaimer.hidden = step !== 3;
+    if (step !== 3) reviewConsent.checked = false;
     resizeProgram();
     updateSchedule();
     if (step === 3) renderReview();
@@ -268,6 +285,8 @@ window.initializeGradeSlip = () => {
     document.querySelector(".grade-slip-request-options").open = false;
     updateSchedule();
     clearErrors();
+    reviewConsent.removeAttribute("aria-invalid");
+    document.querySelector(".grade-slip-review-additional").open = false;
   }
 
   function loadAccount(snapshot) {
@@ -329,6 +348,10 @@ window.initializeGradeSlip = () => {
   });
   backButton.addEventListener("click", () => goToStep(currentStep - 1));
   nextButton.addEventListener("click", () => goToStep(currentStep + 1));
+  reviewConsent.addEventListener("change", () => {
+    reviewConsent.removeAttribute("aria-invalid");
+    clearErrors();
+  });
   fields.forEach((input) => {
     input.addEventListener("input", () => {
       if (!account || submitting) return;
@@ -359,6 +382,15 @@ window.initializeGradeSlip = () => {
         showInvalid(step, invalid);
         return false;
       }
+    }
+    if (!reviewConsent.checked) {
+      if (confirmation.open) confirmation.close("invalid");
+      showStep(3, false, false);
+      reviewConsent.setAttribute("aria-invalid", "true");
+      errorMessage.textContent = "Confirm that the information above is correct and complete before continuing.";
+      errorMessage.hidden = false;
+      reviewConsent.focus();
+      return false;
     }
     return true;
   }

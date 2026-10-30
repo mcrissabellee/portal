@@ -8,7 +8,9 @@
     "grade-slip": { hash: "#/services/grade-slip", file: "pages/grade-slip.html" },
     "grade-slip-complete": { hash: "#/services/grade-slip/complete", file: "pages/grade-slip-complete.html" },
     "registration-form": { hash: "#/services/registration-form", file: "pages/registration-form.html" },
+    "registration-form-complete": { hash: "#/services/registration-form/complete", file: "pages/registration-form-complete.html" },
     "id-printing": { hash: "#/services/id-printing", file: "pages/id-printing.html" },
+    "id-printing-complete": { hash: "#/services/id-printing/complete", file: "pages/id-printing-complete.html" },
     requests: { hash: "#/my-request", file: "pages/my-request.html" },
     records: { hash: "#/academic-records", file: "pages/academic-records.html" },
     announcements: { hash: "#/announcements", file: "pages/announcements.html" },
@@ -86,6 +88,8 @@
       window.initializePortalDashboard();
       window.initializePortalSettings();
       window.initializeGradeSlip();
+      window.initializeIdPrinting();
+      window.initializeRegistrationForm();
       root.removeAttribute("aria-busy");
       document.dispatchEvent(new Event("portal:ready"));
       return true;

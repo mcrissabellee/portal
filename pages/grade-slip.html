@@ -14,7 +14,7 @@
   <div class="grade-slip-workspace">
     <form class="grade-slip-card" id="grade-slip-form" novalidate>
       <section id="grade-slip-personal" data-grade-panel="1" aria-labelledby="grade-slip-personal-title">
-        <h3 id="grade-slip-personal-title" tabindex="-1"><svg class="portal-icon" aria-hidden="true"><use href="#icon-user"/></svg>Personal Information</h3>
+        <h3 class="grade-slip-personal-heading" id="grade-slip-personal-title" tabindex="-1"><svg class="portal-icon" aria-hidden="true"><use href="#icon-user"/></svg>Personal Information</h3>
         <div class="grade-slip-fields">
           <div class="grade-slip-field"><label for="grade-slip-student-number">Student Number</label><input id="grade-slip-student-number" name="studentNumber" type="text" readonly></div>
           <div class="grade-slip-field"><label for="grade-slip-full-name">Full Name</label><input id="grade-slip-full-name" name="fullName" type="text" autocomplete="name" maxlength="100" required data-grade-field aria-describedby="grade-slip-error"></div>
@@ -46,31 +46,42 @@
       </section>
 
       <section id="grade-slip-review" data-grade-panel="3" aria-labelledby="grade-slip-review-title" hidden>
-        <h3 id="grade-slip-review-title" tabindex="-1"><svg class="portal-icon" aria-hidden="true"><use href="#icon-check"/></svg>Review &amp; Submit</h3>
-        <p class="grade-slip-review-intro">Review your information before creating your Grade Slip request.</p>
-        <div class="grade-slip-review-heading"><h4>Personal Information</h4><button class="text-link" type="button" data-grade-step="1">Edit information</button></div>
-        <dl class="grade-slip-review-grid">
-          <div><dt>Student Number</dt><dd data-grade-review="studentNumber"></dd></div>
-          <div><dt>Full Name</dt><dd data-grade-review="fullName"></dd></div>
-          <div><dt>Program</dt><dd data-grade-review="program"></dd></div>
-          <div><dt>Year Level</dt><dd data-grade-review="yearLevel"></dd></div>
-          <div><dt>Semester</dt><dd data-grade-review="semester"></dd></div>
-        </dl>
-        <div class="grade-slip-review-heading"><h4>Grade Slip Details</h4><button class="text-link" type="button" data-grade-step="2">Edit details</button></div>
-        <dl class="grade-slip-review-grid">
-          <div><dt>Academic Year</dt><dd data-grade-review="academicYear"></dd></div>
-          <div><dt>Requested Semester</dt><dd data-grade-review="requestedSemester"></dd></div>
-          <div><dt>Appointment Date</dt><dd data-grade-review="appointmentDate"></dd></div>
-          <div><dt>Appointment Time</dt><dd data-grade-review="appointmentTimeRange"></dd></div>
+        <div class="grade-slip-review-banner">
+          <h3 id="grade-slip-review-title" tabindex="-1"><svg class="portal-icon" aria-hidden="true"><use href="#icon-check"/></svg>Review &amp; Submit</h3>
+          <p class="grade-slip-review-intro">Review your chosen schedule and details before submitting.</p>
+        </div>
+        <div class="grade-slip-review-layout">
+          <div class="grade-slip-review-student">
+            <dl class="grade-slip-review-grid">
+              <div><dt>Student Name</dt><dd data-grade-review="fullName"></dd></div>
+              <div><dt>Year Level</dt><dd data-grade-review="yearLevel"></dd></div>
+              <div><dt>Student ID</dt><dd data-grade-review="studentNumber"></dd></div>
+              <div><dt>Current Semester</dt><dd data-grade-review="semester"></dd></div>
+              <div class="grade-slip-field-wide"><dt>Program</dt><dd data-grade-review="program"></dd></div>
+            </dl>
+            <p class="grade-slip-review-academic-intro">Academic year and semester for the grade slip you wish to request.</p>
+            <dl class="grade-slip-review-academic">
+              <div><dt class="visually-hidden">Academic Year</dt><dd data-grade-review="academicYearLabel"></dd></div>
+              <div><dt class="visually-hidden">Requested Semester</dt><dd data-grade-review="requestedSemester"></dd></div>
+            </dl>
+          </div>
+          <div class="grade-slip-review-schedule">
+            <div><h4>Selected Schedule</h4><time class="grade-slip-review-date" id="grade-slip-review-date"><span class="grade-slip-review-month" data-grade-review="appointmentMonth"></span><span class="grade-slip-review-day"><span data-grade-review="appointmentWeekday"></span><strong data-grade-review="appointmentDay"></strong></span></time></div>
+            <div><h4>Selected Time</h4><div class="grade-slip-review-time"><span data-grade-review="appointmentTimeRange"></span></div></div>
+          </div>
+        </div>
+        <details class="grade-slip-review-additional"><summary>Additional request details</summary><dl class="grade-slip-review-grid">
           <div><dt>Purpose</dt><dd data-grade-review="purpose"></dd></div>
           <div><dt>Copies</dt><dd data-grade-review="copies"></dd></div>
           <div class="grade-slip-field-wide"><dt>Additional Notes</dt><dd data-grade-review="notes"></dd></div>
-        </dl>
+        </dl></details>
+        <label class="grade-slip-review-consent" for="grade-slip-confirm-information"><input id="grade-slip-confirm-information" type="checkbox" required aria-describedby="grade-slip-error"><span>I confirm that the information above is correct and complete</span></label>
         <p class="grade-slip-demo-note">This creates a demo request in this browser, not an official submission to the registrar.</p>
       </section>
 
       <p class="grade-slip-error" id="grade-slip-error" role="alert" hidden></p>
-      <div class="grade-slip-actions"><button class="secondary-button" id="grade-slip-back" type="button" hidden>Back</button><button class="primary-button" id="grade-slip-next" type="button">Next <svg class="portal-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button><button class="primary-button" id="grade-slip-submit" type="submit" hidden>Submit request</button></div>
+      <div class="grade-slip-actions"><button class="secondary-button" id="grade-slip-back" type="button" hidden>Back</button><button class="primary-button" id="grade-slip-next" type="button">Next <svg class="portal-icon" aria-hidden="true"><use href="#icon-arrow"/></svg></button><button class="primary-button" id="grade-slip-submit" type="submit" hidden>Confirm Schedule</button></div>
+      <p class="grade-slip-review-disclaimer" id="grade-slip-review-disclaimer" hidden>DISCLAIMER: Please ensure that you arrive and attend at the exact scheduled time. Punctuality is strictly required.</p>
     </form>
 
     <button class="settings-assistant grade-slip-assistant" type="button" data-assistant="How can I request a grade slip?"><span class="settings-assistant-hint">Questions? Chat with me!</span><img src="assets/images/assistant.svg" alt="" width="34" height="40"><span>RTU AI ASSISTANT</span></button>

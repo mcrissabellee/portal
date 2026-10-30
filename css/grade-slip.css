@@ -15,11 +15,15 @@
 .grade-slip-step:hover { border-color: #779bc5; }
 .grade-slip-step.is-active { background: #07396e; color: #fff; }
 .grade-slip-step.is-complete { border-color: #8ba9c9; }
-.grade-slip-workspace { position: relative; min-height: 420px; }
-.grade-slip-card { width: min(720px, 100%); min-height: 420px; margin: 0; padding: 12px 24px 24px; background: #dbe9fc; }
+.grade-slip-workspace { position: relative; min-height: 420px; container-type: inline-size; }
+.grade-slip-card { width: min(720px, 100%); min-height: 420px; margin: 0; padding: 12px 24px 24px; background: transparent; }
 .grade-slip-card h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 26px; font-size: 18px; font-weight: 400; line-height: 1.4; }
 .grade-slip-card h3 .portal-icon { width: 36px; height: 36px; }
 .grade-slip-card h3:focus { outline: none; }
+.grade-slip-card:has(#grade-slip-personal:not([hidden])) { width: 100%; padding-top: 0; }
+.grade-slip-card .grade-slip-personal-heading { margin: 0 -56px 24px; padding: 8px 40px; background: #dbe9fc; color: #000; }
+.grade-slip-card:has(#grade-slip-personal:not([hidden])) .grade-slip-actions { max-width: 672px; }
+#grade-slip-personal > .grade-slip-fields { max-width: 672px; }
 .grade-slip-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 244px)); gap: 26px 58px; }
 .grade-slip-field { min-width: 0; }
 .grade-slip-field label { display: block; margin-bottom: 4px; font-size: 15px; font-weight: 700; line-height: 1.3; }
@@ -33,7 +37,10 @@
 .grade-slip-field :is(input, textarea)::placeholder { color: #637d9a; opacity: 1; }
 .grade-slip-field small { display: block; margin-top: 5px; color: #526b88; font-size: 12px; line-height: 1.4; }
 .grade-slip-field-wide { grid-column: 1 / -1; }
-.grade-slip-details-heading { display: flex; align-items: flex-start; gap: 9px; margin: 0 0 20px; }
+.grade-slip-details-heading { position: relative; isolation: isolate; display: flex; align-items: flex-start; gap: 9px; margin: 0 0 20px; }
+.grade-slip-review-banner { position: relative; isolation: isolate; margin-bottom: 30px; }
+.grade-slip-card .grade-slip-review-banner h3 { margin-bottom: 0; }
+.grade-slip-details-heading::before, .grade-slip-review-banner::before { content: ""; position: absolute; z-index: -1; top: -8px; bottom: -8px; left: -56px; width: calc(100cqw + 64px); background: #dbe9fc; pointer-events: none; }
 .grade-slip-details-heading > .portal-icon { flex: 0 0 34px; width: 34px; height: 34px; }
 .grade-slip-details-heading h3 { margin: 0; }
 .grade-slip-details-heading p { margin: 0; color: #526b88; font-size: 13px; font-style: italic; line-height: 1.4; }
@@ -60,15 +67,41 @@
 .grade-slip-actions > .secondary-button { margin-right: auto; }
 .grade-slip-actions .portal-icon { width: 19px; height: 19px; margin-left: 9px; }
 .grade-slip-error { margin: 22px 0 0; color: var(--error); font-size: 14px; line-height: 1.5; }
-.grade-slip-review-intro { margin: -12px 0 22px; font-size: 14px; line-height: 1.5; }
-.grade-slip-review-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 20px 0 12px; }
-.grade-slip-review-heading h4 { margin: 0; font-size: 17px; font-weight: 700; }
-.grade-slip-review-heading button { color: #2058af; font-size: 13px; }
-.grade-slip-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 28px; margin: 0; }
+.grade-slip-review-intro { margin: 0 0 0 45px; color: #3b4859; font-size: 14px; font-style: italic; line-height: 1.4; }
+.grade-slip-card:has(#grade-slip-review:not([hidden])) { width: 100%; }
+.grade-slip-review-layout { display: grid; grid-template-columns: minmax(0, 380px) minmax(180px, 240px); gap: 50px; max-width: 720px; }
+.grade-slip-review-student { min-width: 0; }
+.grade-slip-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 38px 28px; margin: 0; }
 .grade-slip-review-grid > div { min-width: 0; }
-.grade-slip-review-grid dt { color: #526b88; font-size: 13px; font-weight: 400; }
-.grade-slip-review-grid dd { margin: 2px 0 0; font-size: 15px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-line; }
-.grade-slip-demo-note { margin: 22px 0 0; color: #526b88; font-size: 12px; line-height: 1.5; }
+.grade-slip-review-grid dt { font-size: 14px; font-weight: 400; }
+.grade-slip-review-grid dd { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; white-space: pre-line; }
+.grade-slip-review-academic-intro { margin: 22px 0 8px; font-size: 13px; line-height: 1.4; }
+.grade-slip-review-academic { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.grade-slip-review-academic > div { min-width: 0; padding: 6px 10px; border-radius: 16px; background: #dbe9fc; box-shadow: 0 3px 12px #0004; }
+.grade-slip-review-academic dd { margin: 0; padding: 3px 6px; border-radius: 14px; background: #bdddf3; font-size: 14px; text-align: center; overflow-wrap: anywhere; }
+.grade-slip-review-schedule { display: grid; align-content: start; justify-items: center; gap: 28px; text-align: center; }
+.grade-slip-review-schedule h4 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+.grade-slip-review-date { display: grid; justify-items: center; gap: 8px; min-width: 160px; padding: 6px 8px 14px; border-radius: 16px; background: #dbe9fc; box-shadow: 0 4px 16px #0005; }
+.grade-slip-review-month { width: 100%; padding: 3px 8px; border-radius: 14px; background: #bdddf3; font-size: 14px; }
+.grade-slip-review-day { display: grid; min-width: 48px; padding: 5px 10px; border-radius: 4px; background: #124b89; color: #fff; line-height: 1.2; }
+.grade-slip-review-day > span { font-size: 11px; text-transform: uppercase; }
+.grade-slip-review-day strong { font-size: 16px; font-weight: 400; }
+.grade-slip-review-time { padding: 12px; border-radius: 16px; background: #dbe9fc; box-shadow: 0 4px 16px #0005; }
+.grade-slip-review-time > span { display: block; padding: 12px 8px; border-radius: 4px; background: #124b89; color: #fff; font-size: 16px; }
+.grade-slip-review-additional { max-width: 670px; margin-top: 18px; }
+.grade-slip-review-additional summary { width: fit-content; color: #315e8d; font-size: 13px; cursor: pointer; }
+.grade-slip-review-additional .grade-slip-review-grid { gap: 16px 28px; margin-top: 12px; }
+.grade-slip-review-additional dd { font-size: 15px; font-weight: 600; }
+.grade-slip-review-consent { display: flex; align-items: center; gap: 8px; width: fit-content; max-width: 100%; margin-top: 28px; color: #3b4859; font-size: 16px; font-style: italic; cursor: pointer; }
+.grade-slip-review-consent input { flex: 0 0 28px; width: 28px; height: 28px; margin: 0; accent-color: #124b89; cursor: pointer; }
+.grade-slip-review-consent input[aria-invalid="true"] { outline: 2px solid var(--error); outline-offset: 3px; }
+.grade-slip-demo-note { max-width: 670px; margin: 12px 0 0; color: #526b88; font-size: 12px; line-height: 1.5; }
+.grade-slip-card:has(#grade-slip-review:not([hidden])) .grade-slip-actions { margin-top: 28px; }
+.grade-slip-card:has(#grade-slip-review:not([hidden])) #grade-slip-back { min-height: 34px; padding: 5px 12px; border: 1px solid #3b4859; border-radius: 2px; background: #edf4ff; color: #07396e; font-size: 16px; }
+#grade-slip-submit { min-height: 40px; padding: 8px 22px; border-radius: 2px; background: #50c000; color: #07396e; font-size: 17px; font-weight: 700; }
+#grade-slip-submit:hover { background: #43a200; }
+.grade-slip-review-disclaimer { max-width: 380px; margin: 6px 0 0 auto; color: #3b4859; font-size: 13px; font-style: italic; line-height: 1.1; text-align: right; }
+.grade-slip-workspace:has(#grade-slip-review:not([hidden])) .grade-slip-assistant { bottom: 145px; }
 .grade-slip-assistant { position: absolute; right: 0; bottom: 22px; min-width: 260px; margin: 0; }
 .grade-slip-footer { margin: 6px 18px 0; padding-top: 10px; border-top: 4px solid #d5d5d5; }
 .grade-slip-footer p { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-style: italic; line-height: 1.5; }
@@ -125,6 +158,10 @@ html[data-theme="dark"] .grade-slip-heading > div:first-child > p,
 html[data-theme="dark"] .grade-slip-progress p,
 html[data-theme="dark"] .grade-slip-field small,
 html[data-theme="dark"] .grade-slip-review-grid dt,
+html[data-theme="dark"] .grade-slip-review-intro,
+html[data-theme="dark"] .grade-slip-review-consent,
+html[data-theme="dark"] .grade-slip-review-disclaimer,
+html[data-theme="dark"] .grade-slip-review-additional summary,
 html[data-theme="dark"] .grade-slip-demo-note { color: var(--theme-muted); }
 html[data-theme="dark"] .grade-slip-details-heading p,
 html[data-theme="dark"] .grade-slip-time-range,
@@ -137,18 +174,26 @@ html[data-theme="dark"] .grade-slip-progress progress::-webkit-progress-value { 
 html[data-theme="dark"] .grade-slip-progress progress::-moz-progress-bar { background: #8bb6ff; }
 html[data-theme="dark"] .grade-slip-step { border-color: #5c7597; background: #2d4566; color: var(--theme-text); }
 html[data-theme="dark"] .grade-slip-step.is-active { background: #17539a; color: #fff; }
-html[data-theme="dark"] .grade-slip-card { background: #1d304b; }
+html[data-theme="dark"] .grade-slip-card .grade-slip-personal-heading { background: #1d304b; color: var(--theme-text); }
+html[data-theme="dark"] .grade-slip-details-heading::before,
+html[data-theme="dark"] .grade-slip-review-banner::before { background: #1d304b; }
 html[data-theme="dark"] .grade-slip-field :is(input, select, textarea) { background: #294362; color: var(--theme-text); }
 html[data-theme="dark"] .grade-slip-field :is(input, textarea)::placeholder { color: var(--theme-muted); }
-html[data-theme="dark"] .grade-slip-review-heading button { color: #a7ceff; }
+html[data-theme="dark"] .grade-slip-review-academic > div,
+html[data-theme="dark"] .grade-slip-review-date,
+html[data-theme="dark"] .grade-slip-review-time { background: #1d304b; }
+html[data-theme="dark"] .grade-slip-review-academic dd,
+html[data-theme="dark"] .grade-slip-review-month { background: #294362; }
 html[data-theme="dark"] .grade-slip-footer { border-color: var(--theme-line); }
 
 @media (max-width: 1250px) {
   .grade-slip-assistant { position: relative; display: flex; width: fit-content; min-width: 0; margin: 50px 0 20px auto; bottom: auto; }
+  .grade-slip-workspace:has(#grade-slip-review:not([hidden])) .grade-slip-assistant { bottom: auto; }
 }
 @media (max-width: 960px) {
   .grade-slip-fields { gap: 24px; }
   .grade-slip-step { font-size: 15px; }
+  .grade-slip-review-layout { grid-template-columns: minmax(0, 1fr) minmax(170px, 210px); gap: 24px; }
 }
 @media (max-width: 700px) {
   .dashboard-shell[data-current-page="grade-slip-complete"] .dashboard-main { padding: 38px 18px; }
@@ -163,10 +208,17 @@ html[data-theme="dark"] .grade-slip-footer { border-color: var(--theme-line); }
   .grade-slip-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
   .grade-slip-step { padding: 8px 6px; font-size: 12px; }
   .grade-slip-card { padding: 14px 18px 22px; }
+  .grade-slip-card .grade-slip-personal-heading { margin-left: -34px; margin-right: -34px; padding-left: 34px; padding-right: 34px; }
+  .grade-slip-details-heading::before, .grade-slip-review-banner::before { left: -34px; width: calc(100cqw + 32px); }
   .grade-slip-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grade-slip-field :is(input, select, textarea) { font-size: 16px; }
   .grade-slip-footer { margin-left: 0; margin-right: 0; }
   .grade-slip-footer p { font-size: 13px; }
+  .grade-slip-review-layout { grid-template-columns: 1fr; gap: 28px; }
+  .grade-slip-review-schedule { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 16px; }
+  .grade-slip-review-schedule > div { min-width: 0; }
+  .grade-slip-review-date { min-width: 0; }
+  .grade-slip-review-consent { font-size: 14px; }
 }
 @media (max-width: 480px) {
   .portal-dialog.grade-slip-confirmation { padding: 26px 20px; }
@@ -176,4 +228,10 @@ html[data-theme="dark"] .grade-slip-footer { border-color: var(--theme-line); }
   .grade-slip-fields, .grade-slip-review-grid, .grade-slip-time-fields { grid-template-columns: 1fr; gap: 18px; }
   .grade-slip-card h3 { font-size: 17px; }
   .grade-slip-field label { font-size: 14px; }
+  .grade-slip-review-student > .grade-slip-review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 16px; }
+  .grade-slip-review-grid dd { font-size: 16px; }
+  .grade-slip-review-schedule { grid-template-columns: 1fr; }
+  .grade-slip-review-schedule > div { width: min(240px, 100%); }
+  .grade-slip-review-academic { grid-template-columns: 1fr; }
+  .grade-slip-review-intro { margin-left: 0; }
 }
