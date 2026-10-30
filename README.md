@@ -23,8 +23,18 @@ Bootstrap loads from jsDelivr. The page also includes local styling for its core
 - Accessible password visibility toggle and inline form validation.
 - Password recovery and registration dialogs with keyboard focus management and Escape-to-close support.
 - Browser-local student registration and sign-in, without a built-in password.
+- Provisioned staff sign-in using an employee number, with no public staff registration.
+- Separate role-specific staff workspace with its own shell, navigation, routes, and student-route guards.
+- Staff dashboard with request statistics, a recent-request queue, quick actions, and service volume.
+- Shared browser-local request data source used by both Student My Request and Staff Request Management, with persisted status propagation.
+- Staff Request Management with summary cards, search, status and document filters, sorting, pagination, details, lifecycle actions, and status history.
+- Student request lifecycle statuses: Pending Review, Needs Correction, Approved, Rejected, Processing, Ready for Pickup, Released, and Cancelled.
+- Staff Appointment Management with summary cards, interactive month/week/day calendar, appointment list, filters, pagination, details, and lifecycle actions.
+- Appointment statuses: Pending Confirmation, Scheduled, Checked In, Completed, Cancelled, and No Show.
+- Staff student-records search with program filters, profile details, and related request history.
+- Staff announcement publishing and removal, plus staff profile editing and account settings.
 - Duplicate student-number/email checks and salted password hashes for registered demo accounts.
-- Tab-scoped sign-in session that survives refresh and is cleared by Log out.
+- Tab-scoped sign-in session that survives refresh, records the account's role, and is cleared by Log out.
 - Header sun/moon button for light and dark mode, saved separately for each demo account.
 - Reference-inspired dashboard with university branding, navigation, assistant search, and quick services.
 - Services, request previews, academic records, announcements, help, profile, and logout.
@@ -63,21 +73,38 @@ pages/announcements.html        Announcement route
 pages/help.html                 Help route
 pages/profile.html              My Profile route
 pages/settings.html             Settings route and its section panels
-components/dashboard-shell.html Shared header, account menu, sidebar, and view container
+pages/staff-dashboard.html      Staff dashboard route
+pages/staff-requests.html       Staff Request Management route
+pages/staff-appointments.html   Staff Appointment Management route
+pages/staff-records.html        Staff student-records route
+pages/staff-announcements.html  Staff announcements route
+pages/staff-profile.html        Staff profile route
+pages/staff-settings.html       Staff settings route and its section panels
+components/dashboard-shell.html Shared student header, account menu, sidebar, and view container
+components/staff-shell.html     Shared staff header, account menu, sidebar, and view container
 components/icons.html          Shared SVG icon library
 components/dialogs.html        Request, schedule confirmation, assistant, recovery, and registration dialogs
 css/style.css                  Reference-inspired design and responsive styles
 css/dashboard.css              Dashboard layout, cards, and mobile navigation
+css/my-request.css             Student My Request cards, progress, history, and dark-mode styles
+css/staff.css                  Staff workspace, records, announcements, and settings styles
+css/staff-requests.css         Staff Request Management, details, actions, and dark-mode styles
+css/staff-appointments.css      Staff Appointment Management, calendar, details, and dark-mode styles
 css/grade-slip.css             Grade Slip multi-step form layout and theme styles
 css/registration-form.css      Registration Form blue workspace and inline assistant
 css/id-printing.css            ID Printing layout using shared service-wizard styles
-css/theme.css                  Dark-mode colors for dashboard views, settings, and dialogs
+css/theme.css                  Dark-mode colors for dashboard and staff views, settings, and dialogs
 css/motion.css                 Shared interaction, sidebar, dialog, and reduced-motion styles
 js/motion.js                   Shared cancellable transitions and delegated interaction feedback
-js/accounts.js                 Saved demo accounts, password hashing, and sign-in sessions
-js/app.js                      Route-to-file map, HTML loading, and app initialization
+js/accounts.js                 Provisioned staff and saved student accounts, password hashing, role-aware sessions
+js/app.js                      Student and staff route maps, HTML loading, and app initialization
 js/script.js                   Registration, sign-in, role switching, and account dialogs
-js/dashboard.js                Dashboard navigation, request previews, assistant, and logout
+js/dashboard.js                Student dashboard navigation, request previews, My Request, assistant, and logout
+js/request-service.js          Shared request storage, lifecycle, validation, and status propagation
+js/appointment-service.js      Shared appointment storage, scheduling validation, capacity, and lifecycle
+js/staff-dashboard.js          Staff dashboard, records, announcements, profile, settings, and shared stats
+js/staff-requests.js           Staff Request Management filtering, details, and lifecycle actions
+js/staff-appointments.js       Staff Appointment Management calendar, list, details, and actions
 js/settings.js                 Settings sections, account editing, password changes, and preferences
 js/grade-slip.js               Grade Slip steps, validation, saved drafts, and submission
 js/registration-form.js        Registration steps, account-scoped drafts, requests, and chat
@@ -92,7 +119,7 @@ The university seal matches the supplied reference and is stored locally. Source
 
 Edit a route's markup in its matching `pages/*.html` file. Edit the shared header/sidebar in `components/dashboard-shell.html`, the shared icons in `components/icons.html`, and dialogs in `components/dialogs.html`. These files are HTML fragments rendered inside the entry page; navigate using the portal URLs below.
 
-`js/app.js` defines each route's hash and HTML file in one map. On startup it fetches the page and component files in parallel, mounts them once, then initializes login, dashboard, settings, and Grade Slip behavior in order. This keeps form state and in-memory requests intact when changing routes and ensures handlers are attached only after their elements exist. If a file cannot load, the entry page shows the failed path and a reload button.
+`js/app.js` defines the student and staff route maps and their HTML files. On startup it fetches the page and component files in parallel, mounts them once, then initializes login, dashboard, settings, staff dashboard, and Grade Slip behavior in order. This keeps form state and in-memory requests intact when changing routes and ensures handlers are attached only after their elements exist. If a file cannot load, the entry page shows the failed path and a reload button.
 
 Keep the `<body>` boundaries in imported page and component files. They let Live Server inject its reload script once at the end of each response instead of repeatedly inside inline SVG icons. The loader parses each response as an HTML document, removes injected scripts, and imports only its body content. Live reload remains active through the entry page's script.
 
@@ -102,11 +129,23 @@ In **Student** mode, choose **Register**, enter your full name, student number, 
 
 The registered name, student number, and email appear in **My Profile**. Your name also appears in the header and dashboard, and your student number appears in Academic Records and document request previews. New accounts show **Not provided** for year level, program, and semester, with an optional phone number you can add in My Profile. Profiles are saved separately for each account, so signing into another account loads that user's details. Accounts and saved profiles remain after reload or logout in the same browser. Clearing this site's browser storage removes them.
 
-There is no built-in password. Create your own demo account using **Register** before signing in for the first time. The original student number **2023-103319** remains reserved for compatibility: it can sign in only if it already has a password hash saved in this browser, and retains Juan Dela Cruz's reference profile and existing saved profile edits. Incorrect credentials are rejected. Staff registration and sign-in are not connected.
+There is no built-in student password. Create your own demo account using **Register** before signing in for the first time. The original student number **2023-103319** remains reserved for compatibility: it can sign in only if it already has a password hash saved in this browser, and retains Juan Dela Cruz's reference profile and existing saved profile edits. Incorrect credentials are rejected. Staff accounts are provisioned rather than self-registered; public staff registration is not available.
 
-A demo session marker identifying the signed-in student is stored in `sessionStorage`, keeping you signed in across refreshes in the same browser tab and restoring the page specified in the URL. **Log out** clears that marker and returns to the login screen. Passwords are never included in the session marker. If browser session storage is unavailable, sign-in still works for the current page visit, but cannot survive refresh.
+A demo session marker identifying the signed-in account and its role is stored in `sessionStorage`, keeping you signed in across refreshes in the same browser tab and restoring the page specified in the URL. **Log out** clears that marker and returns to the login screen. Passwords are never included in the session marker. If browser session storage is unavailable, sign-in still works for the current page visit, but cannot survive refresh.
 
-Document requests are in-memory demo drafts, visible under **My Request**. They are cleared on logout or page reload and are not submitted to the university. Reloading preserves your sign-in session and opens the page specified in the URL. The assistant provides local, keyword-based guidance rather than a live AI or registrar connection. Announcements are sample portal content.
+Document requests are browser-local demo records saved under `rtu.portal.requests.v1`. Students can create requests from Services or Academic Records and track status, appointment details, staff remarks, correction or rejection reasons, and status history in **My Request**. Staff can review and process them in **Request Management**, and status changes propagate between both views in the same browser. They are not official registrar submissions, are not shared across devices, and are not synchronized with a university system. Reloading preserves your sign-in session and opens the page specified in the URL. The assistant provides local, keyword-based guidance rather than a live AI or registrar connection. Announcements are sample portal content.
+
+### Staff workspace
+
+Choose **Staff** on the login screen and sign in with the provisioned staff employee number and password. The staff account is provisioned in `js/accounts.js` as a salted PBKDF2-SHA-256 password hash; the plaintext password is provided separately and is not stored in the repository. Staff registration is not available. The staff routes are guarded: a student visiting a `#/staff/...` route is returned to `#/dashboard`, and a staff member visiting a student route is returned to `#/staff/dashboard`.
+
+The staff workspace uses `components/staff-shell.html` and a separate set of pages. **Staff Dashboard** shows live counts for pending review, in processing, ready for pickup, and released requests, the recent request list, quick actions, and service volume. **Request Management** supports summary cards, search, status and document filters, sorting, pagination, request details, lifecycle actions, and immutable status history; updates persist in browser storage and propagate to student My Request. **Student Records** supports name/student-number search, program filtering, a student detail panel, and related request history. **Announcements** lists published staff announcements and includes a compose form; new announcements appear immediately and can be removed. **My Profile** prefills employee details and supports editing with automatic browser-local saving; the employee number remains fixed. **Settings** provides account information, staff password changes, notification preferences, privacy content, session preferences, and logout.
+
+Staff requests, announcements, profile details, preferences, and password changes are stored in `localStorage` under staff-specific keys in this browser only. The seeded queue and records are demo content and are not synchronized with a university system. Changing the staff password updates the stored hash and requires the new password on the next sign-in. Staff sessions restore after refresh like student sessions, and logging out clears the staff session and returns to the login screen. Staff and student storage are separate, so signing into one role does not overwrite the other's saved data.
+
+### Appointments
+
+Staff Appointment Management derives appointments from student requests that include a booking date and time. Appointments are stored under `rtu.portal.appointments.v1` with their own lifecycle and history. Staff can confirm, check in, complete, cancel, mark no-show, and reschedule appointments. Operating hours are 8:00 AM-5:00 PM with one-hour slots and a 4:00 PM latest start; past dates are rejected. The default development capacity is one appointment per overlapping time slot and is explicitly labeled as not an official university capacity. Confirming or completing an appointment does not approve or release the related document request. Cancelled and no-show appointments remain in history.
 
 ### Page routes
 
@@ -129,7 +168,18 @@ Each page has its own hash route and source file:
 | My Profile | `#/profile` | `pages/profile.html` |
 | Settings | `#/settings` | `pages/settings.html` |
 
-For example, open `http://localhost:5500/#/services` and sign in to go directly to Services. Navigation updates the URL, page title, and active navigation item. Browser Back/Forward restores the matching page. Unknown routes fall back to Dashboard after sign-in. Logging out clears the current route and returns to login.
+Staff pages use a separate route map and shell:
+
+| Page | Route | Source file |
+| --- | --- | --- |
+| Staff Dashboard | `#/staff/dashboard` | `pages/staff-dashboard.html` |
+| Request Queue | `#/staff/requests` | `pages/staff-requests.html` |
+| Student Records | `#/staff/records` | `pages/staff-records.html` |
+| Announcements | `#/staff/announcements` | `pages/staff-announcements.html` |
+| Staff Profile | `#/staff/profile` | `pages/staff-profile.html` |
+| Staff Settings | `#/staff/settings` | `pages/staff-settings.html` |
+
+For example, open `http://localhost:5500/#/services` and sign in to go directly to Services, or open `http://localhost:5500/#/staff/requests` and sign in as staff to open the request queue. Navigation updates the URL, page title, and active navigation item. Browser Back/Forward restores the matching page. Unknown routes fall back to the signed-in role's home page. Logging out clears the current route and returns to login.
 
 Select **Services** in the sidebar to expand or collapse its **Grade Slip**, **Registration Form**, and **ID Printing** links. The active service has a gold indicator, highlighted background, and `aria-current="page"`; page headings also identify the current service. Opening a service through a direct link, refresh, browser history, the service catalog, or dashboard shortcuts automatically expands the Services menu and selects the matching item. Each service page can create a demo request that appears in **My Request**. Use **View All Services** on the dashboard or a **Services** breadcrumb to open the complete catalog. The disclosure supports Enter/Space and Escape, and service navigation also works in the mobile sidebar and dark mode.
 

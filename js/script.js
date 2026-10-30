@@ -7,6 +7,8 @@ window.initializePortalLogin = () => {
   const passwordInput = document.querySelector("#password");
   const passwordToggle = document.querySelector("#password-toggle");
   const loginStatus = document.querySelector("#login-status");
+  const registerPrompt = document.querySelector("#register-prompt");
+  const provisionNote = document.querySelector("#staff-provision-note");
   const accounts = window.PortalAccounts;
   let activeRole = "student";
   let loginPending = false;
@@ -56,6 +58,8 @@ window.initializePortalLogin = () => {
     accountInput.placeholder = details.accountLabel;
     document.querySelector("#register-title").textContent = details.registerTitle;
     document.querySelector("#register-number-label").textContent = details.accountLabel;
+    registerPrompt.hidden = role !== "student";
+    provisionNote.hidden = role !== "staff";
 
     loginForm.reset();
     hidePassword();
@@ -69,6 +73,8 @@ window.initializePortalLogin = () => {
   roleButtons.forEach((button) => {
     button.addEventListener("click", () => setRole(button.dataset.role));
   });
+
+  if (window.location.hash.startsWith("#/staff/")) setRole("staff");
 
   passwordToggle.addEventListener("click", () => {
     const visible = passwordInput.type === "password";
@@ -102,20 +108,16 @@ window.initializePortalLogin = () => {
     }
 
     hidePassword();
-    if (activeRole !== "student") {
-      loginStatus.textContent = "Staff sign-in is not available yet. Please use your student account.";
-      return;
-    }
-
     const submitButton = loginForm.querySelector('[type="submit"]');
     loginPending = true;
     submitButton.disabled = true;
     loginStatus.textContent = "Signing in…";
     try {
-      const account = await accounts.authenticate(accountInput.value, passwordInput.value);
+      const account = await accounts.authenticate(accountInput.value, passwordInput.value, activeRole);
       passwordInput.value = "";
       if (!account) {
-        loginStatus.textContent = "Incorrect student number or password. Please try again.";
+        const identifier = activeRole === "student" ? "student number" : "employee number";
+        loginStatus.textContent = `Incorrect ${identifier} or password. Please try again.`;
         passwordInput.focus();
         return;
       }
@@ -209,7 +211,7 @@ window.initializePortalLogin = () => {
     const status = document.querySelector("#register-status");
     if (!validateDialog(registerForm, status)) return;
     if (activeRole !== "student") {
-      status.textContent = "Staff registration is not available yet. Choose Student to create a demo account.";
+      status.textContent = "Staff accounts are provisioned by the Academic Services Office. Choose Student to create a student account.";
       return;
     }
     const submitButton = registerForm.querySelector('[type="submit"]');

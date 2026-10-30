@@ -1,0 +1,37 @@
+<body>
+<section class="dashboard-view profile-view staff-profile-view" data-view="staff-profile" aria-labelledby="staff-profile-title" hidden>
+  <h2 id="staff-profile-title" tabindex="-1">My Profile</h2>
+  <div class="profile-panel">
+    <header class="profile-identity">
+      <span class="profile-avatar staff-profile-avatar" data-staff-initials aria-hidden="true">CV</span>
+      <div><h3 data-staff-name>Crissabelle Veloso</h3><p><span class="profile-role" data-staff-position>Academic Services Staff</span></p><p data-staff-department>Office of the Registrar</p></div>
+    </header>
+
+    <form id="staff-profile-form" novalidate>
+      <fieldset class="profile-section">
+        <legend><span>Staff Information</span><button class="profile-edit-button" id="staff-profile-edit-button" type="button" aria-label="Edit staff profile information" aria-controls="staff-profile-form" aria-pressed="false" title="Edit staff profile information"><svg class="portal-icon" aria-hidden="true"><use id="staff-profile-edit-icon" href="#icon-pencil"/></svg><span id="staff-profile-edit-label">Edit</span></button></legend>
+        <div class="profile-fields">
+          <div class="profile-field"><label for="staff-profile-full-name">Full Name</label><input id="staff-profile-full-name" name="fullName" type="text" value="Crissabelle Veloso" autocomplete="name" maxlength="100" required readonly data-staff-editable aria-describedby="staff-profile-status"></div>
+          <div class="profile-field"><label for="staff-profile-employee-number">Employee Number</label><input id="staff-profile-employee-number" name="employeeNumber" type="text" value="2020-123456" readonly></div>
+          <div class="profile-field"><label for="staff-profile-position">Position</label><input id="staff-profile-position" name="position" type="text" value="Academic Services Staff" maxlength="80" readonly data-staff-editable></div>
+          <div class="profile-field"><label for="staff-profile-department">Department</label><input id="staff-profile-department" name="department" type="text" value="Office of the Registrar" maxlength="100" readonly data-staff-editable></div>
+          <div class="profile-field"><label for="staff-profile-office">Office Location</label><input id="staff-profile-office" name="officeLocation" type="text" value="RTU Pasig Campus - Registrar's Office" maxlength="120" readonly data-staff-editable></div>
+          <div class="profile-field"><label for="staff-profile-hours">Office Hours</label><input id="staff-profile-hours" name="officeHours" type="text" value="Monday to Friday, 8:00 AM - 5:00 PM" maxlength="100" readonly data-staff-editable></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="profile-section profile-account-section">
+        <legend>Contact Information</legend>
+        <div class="profile-fields">
+          <div class="profile-field"><label for="staff-profile-email">Email Address</label><input id="staff-profile-email" name="email" type="email" value="cheezyyummy@gmail.com" autocomplete="email" maxlength="254" required readonly data-staff-editable aria-describedby="staff-profile-status"></div>
+          <div class="profile-field"><label for="staff-profile-phone">Phone Number</label><input id="staff-profile-phone" name="phoneNumber" type="tel" placeholder="Add your phone number" autocomplete="tel" maxlength="20" readonly data-staff-editable aria-describedby="staff-profile-status"></div>
+        </div>
+      </fieldset>
+
+      <footer class="profile-footer">
+        <p class="profile-save-status" id="staff-profile-status" role="status" aria-live="polite" aria-atomic="true"><svg class="portal-icon" aria-hidden="true"><use href="#icon-history"/></svg><span id="staff-profile-message">Auto-save ready</span></p>
+      </footer>
+    </form>
+  </div>
+</section>
+</body>

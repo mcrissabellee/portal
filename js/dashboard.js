@@ -4,6 +4,15 @@ window.initializePortalDashboard = () => {
   const loginScreen = document.querySelector("#login-screen");
   const dashboardScreen = document.querySelector("#dashboard-screen");
   const requestDialog = document.querySelector("#request-dialog");
+  const requestCancelDialog = document.querySelector("#request-cancel-dialog");
+  const requestCancelForm = document.querySelector("#request-cancel-form");
+  const requestCancelDocument = document.querySelector("#request-cancel-document");
+  const requestCancelReason = document.querySelector("#request-cancel-reason");
+  const requestCancelStatus = document.querySelector("#request-cancel-status");
+  const requestCancelSubmit = document.querySelector("#request-cancel-submit");
+  const requestList = document.querySelector("#request-list");
+  const requestEmpty = document.querySelector("#student-request-empty");
+  const requestFeedback = document.querySelector("#student-request-feedback");
   const assistantDialog = document.querySelector("#assistant-dialog");
   const sidebarToggle = document.querySelector("#sidebar-toggle");
   const sidebarOverlay = document.querySelector("#sidebar-overlay");
@@ -23,11 +32,14 @@ window.initializePortalDashboard = () => {
   const profileEditLabel = document.querySelector("#profile-edit-label");
   const profileEditIcon = document.querySelector("#profile-edit-icon");
   const accounts = window.PortalAccounts;
+  const requestService = window.PortalRequestService;
   const profileInputs = [...profileForm.querySelectorAll("[data-profile-editable]")];
-  const requests = [];
   const routes = Object.fromEntries(Object.entries(window.PortalRoutes).map(([page, route]) => [page, route.hash]));
   const completionPages = new Set(Object.keys(routes).filter((page) => page.endsWith("-complete")));
   let selectedDocument = "";
+  let selectedRequestId = "";
+  let activeRequestId = "";
+  let requestFeedbackTimer;
   let profileSaveTimer;
   let profileUpdatedAt = null;
   let activeAccount = null;
@@ -290,6 +302,7 @@ window.initializePortalDashboard = () => {
     const view = document.querySelector(`[data-view="${page}"]`);
     if (!view) return;
     dashboardScreen.dataset.currentPage = page;
+    if (page === "requests") selectedRequestId = "";
     if (["profile", "settings"].includes(page) && profileSaveTimer === undefined && !profileStatus.classList.contains("is-error")) showProfileSavedTime();
     window.PortalMotion.swap(document.querySelectorAll("[data-view]"), view);
     document.querySelectorAll(".dashboard-nav [data-page], .account-options [data-page]").forEach((button) => {
@@ -340,12 +353,14 @@ window.initializePortalDashboard = () => {
     loginScreen.hidden = true;
     dashboardScreen.hidden = false;
     if (!profileUpdatedAt) saveProfile();
+    selectedRequestId = "";
+    renderRequests();
     navigate(pageFromRoute(), true);
     document.dispatchEvent(new CustomEvent("portal:accountchange", { detail: profileSnapshot() }));
   }
 
   document.addEventListener("portal:login", (event) => {
-    if (!event.detail) return;
+    if (event.detail?.role !== "student") return;
     accounts.saveSession(event.detail);
     openDashboard(event.detail);
   });
@@ -391,7 +406,10 @@ window.initializePortalDashboard = () => {
     dashboardScreen.hidden = true;
     setServicesExpanded(false);
     loginScreen.hidden = false;
-    requests.length = 0;
+    selectedRequestId = "";
+    activeRequestId = "";
+    if (requestCancelDialog.open) requestCancelDialog.close();
+    setRequestFeedback("");
     renderRequests();
     document.querySelector("#login-form").reset();
     document.querySelector("#login-status").textContent = "";
@@ -416,66 +434,510 @@ window.initializePortalDashboard = () => {
     });
   });
 
+  function formatRequestDateTime(value) {
+    if (!value || Number.isNaN(new Date(value).getTime())) return "Not available";
+    return new Date(value).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+
+  function detailLabel(key) {
+    const labels = { academicYear: "Academic Year", requestedSemester: "Requested Semester", copies: "Copies", notes: "Additional Notes", purpose: "Purpose", email: "Email", phoneNumber: "Phone Number" };
+    return labels[key] || key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (letter) => letter.toUpperCase());
+  }
+
+  function requestDetailEntries(request) {
+    const skipped = new Set(["fullName", "studentNumber", "purpose", "appointmentDate", "appointmentDateLabel", "appointmentStart", "appointmentEnd", "appointmentTimeRange", "appointmentEndNextDay"]);
+    return Object.entries(request.details || {}).filter(([key, value]) => (
+      !skipped.has(key) && value !== "" && value !== null && value !== undefined && typeof value !== "object"
+    )).map(([key, value]) => [detailLabel(key), String(value)]);
+  }
+
+  function setRequestFeedback(message, error = false) {
+    window.clearTimeout(requestFeedbackTimer);
+    requestFeedback.textContent = message;
+    requestFeedback.classList.toggle("is-error", error);
+    if (message && !error) {
+      requestFeedbackTimer = window.setTimeout(() => {
+        requestFeedback.textContent = "";
+        requestFeedback.classList.remove("is-error");
+      }, 5000);
+    }
+  }
+
+  function appendMeta(list, label, value) {
+    const item = document.createElement("div");
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const description = document.createElement("dd");
+    description.textContent = value;
+    item.append(term, description);
+    list.append(item);
+  }
+
+  const REQUEST_PROGRESS_STEPS = Object.freeze([
+    { label: "Request Submitted", icon: "icon-document" },
+    { label: "Under Verification", icon: "icon-search" },
+    { label: "Processing Documents", icon: "icon-settings" },
+    { label: "Ready for Pick-up", icon: "icon-document" },
+    { label: "Claimed", icon: "icon-user" },
+  ]);
+  const REQUEST_STEP_INDEX = Object.freeze({
+    [requestService.STATUS.PENDING]: 1,
+    [requestService.STATUS.CORRECTION]: 1,
+    [requestService.STATUS.APPROVED]: 2,
+    [requestService.STATUS.PROCESSING]: 2,
+    [requestService.STATUS.READY]: 3,
+    [requestService.STATUS.REJECTED]: 1,
+    [requestService.STATUS.CANCELLED]: 1,
+  });
+  const REQUEST_STEP_CAPTIONS = Object.freeze({
+    [requestService.STATUS.PENDING]: "In Progress",
+    [requestService.STATUS.CORRECTION]: "Needs Correction",
+    [requestService.STATUS.APPROVED]: "Awaiting Processing",
+    [requestService.STATUS.PROCESSING]: "In Progress",
+    [requestService.STATUS.READY]: "In Progress",
+    [requestService.STATUS.REJECTED]: "Not Approved",
+    [requestService.STATUS.CANCELLED]: "Cancelled",
+  });
+  const REQUEST_ACTIVITY_TEXT = Object.freeze({
+    "Request Submitted": "Request submitted successfully",
+    "Approved by Staff": "Requirements verified and request approved",
+    "Processing Started": "Document is being processed.",
+    "Ready for Pickup": "Document is ready for pick-up.",
+    "Document Released": "Document released successfully.",
+    "Correction Requested": "Additional information is needed.",
+    "Request Rejected": "Request was not approved.",
+    "Request Cancelled": "Request cancelled.",
+    "Corrections Submitted": "Corrections submitted successfully.",
+  });
+
+  function formatRequestDate(value) {
+    if (!value || Number.isNaN(new Date(value).getTime())) return "Not available";
+    return new Date(value).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+  }
+
+  function formatActivityDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return { date: "Not available", time: "" };
+    return {
+      date: date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }),
+      time: date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
+    };
+  }
+
+  function createIcon(iconId, className = "portal-icon") {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", className);
+    svg.setAttribute("aria-hidden", "true");
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", `#${iconId}`);
+    svg.append(use);
+    return svg;
+  }
+
+  function requestMessages(request) {
+    const messages = [];
+    if (request.correctionReason) messages.push(["Correction needed", request.correctionReason, "is-warning"]);
+    if (request.rejectionReason) messages.push(["Rejection reason", request.rejectionReason, "is-danger"]);
+    if (request.cancelReason) messages.push(["Cancellation reason", request.cancelReason, "is-muted"]);
+    if (request.staffRemarks && ![request.correctionReason, request.rejectionReason].filter(Boolean).includes(request.staffRemarks)) {
+      messages.push(["Staff remarks", request.staffRemarks, "is-info"]);
+    }
+    if (request.studentCorrectionNote && request.status === requestService.STATUS.PENDING) {
+      messages.push(["Your correction note", request.studentCorrectionNote, "is-info"]);
+    }
+    if (request.status === requestService.STATUS.RELEASED && request.releasedBy) {
+      messages.push(["Released by", request.releasedBy, "is-success"]);
+    }
+    return messages;
+  }
+
+  function requestTitle(request) {
+    return /information$/i.test(request.documentType) ? request.documentType : `${request.documentType} Information`;
+  }
+
+  function requestStatusIcon(status) {
+    const tone = requestService.statusTone(status);
+    if (tone === "processing" || tone === "pending") return "icon-clock";
+    if (tone === "correction") return "icon-help";
+    if (tone === "approved" || tone === "ready" || tone === "released") return "icon-check";
+    return "icon-document";
+  }
+
+  function requestProgressState(status) {
+    if (status === requestService.STATUS.RELEASED) {
+      return { completed: REQUEST_PROGRESS_STEPS.length, active: -1, caption: "", tone: "complete" };
+    }
+    const active = REQUEST_STEP_INDEX[status] ?? 1;
+    const tone = status === requestService.STATUS.CORRECTION
+      ? "warning"
+      : status === requestService.STATUS.REJECTED
+        ? "error"
+        : status === requestService.STATUS.CANCELLED
+          ? "muted"
+          : "active";
+    return { completed: active, active, caption: REQUEST_STEP_CAPTIONS[status] || "In Progress", tone };
+  }
+
+  function buildRequestSummary(request) {
+    const summary = document.createElement("section");
+    summary.className = "request-summary";
+
+    const copy = document.createElement("div");
+    copy.className = "request-summary-copy";
+    const title = document.createElement("h3");
+    title.textContent = requestTitle(request);
+    const reference = document.createElement("p");
+    reference.className = "request-summary-id";
+    reference.textContent = `Request ID: ${request.id}`;
+    copy.append(title, reference);
+
+    const divider = document.createElement("span");
+    divider.className = "request-summary-divider";
+    divider.setAttribute("aria-hidden", "true");
+
+    const submitted = document.createElement("div");
+    submitted.className = "request-summary-submitted";
+    const submittedCopy = document.createElement("div");
+    const submittedLabel = document.createElement("small");
+    submittedLabel.textContent = "Submitted on";
+    const submittedDate = document.createElement("strong");
+    submittedDate.textContent = formatRequestDate(request.submittedAt);
+    submittedCopy.append(submittedLabel, submittedDate);
+    submitted.append(createIcon("icon-calendar"), submittedCopy);
+
+    const status = document.createElement("span");
+    status.className = `request-status-pill request-status-${requestService.statusTone(request.status)}`;
+    status.append(createIcon(requestStatusIcon(request.status)), document.createTextNode(displayRequestStatus(request.status)));
+
+    summary.append(createIcon("icon-document", "portal-icon request-summary-icon"), copy, divider, submitted, status);
+    return summary;
+  }
+
+  function buildRequestMessages(request) {
+    const messages = requestMessages(request);
+    if (!messages.length) return null;
+    const notice = document.createElement("div");
+    notice.className = "request-messages";
+    messages.forEach(([label, text, tone]) => {
+      const message = document.createElement("p");
+      message.className = `request-message ${tone}`;
+      const strong = document.createElement("strong");
+      strong.textContent = `${label}: `;
+      message.append(strong, document.createTextNode(text));
+      notice.append(message);
+    });
+    return notice;
+  }
+
+  function buildRequestProgress(request) {
+    const state = requestProgressState(request.status);
+    const progress = document.createElement("ol");
+    progress.className = "request-progress";
+    progress.setAttribute("aria-label", `Progress for ${request.documentType}`);
+    REQUEST_PROGRESS_STEPS.forEach((step, index) => {
+      const item = document.createElement("li");
+      item.className = "request-step";
+      let caption = "Upcoming";
+      let complete = false;
+      if (index < state.completed) {
+        complete = true;
+        item.classList.add("is-complete");
+        caption = "Completed";
+      } else if (index === state.active) {
+        item.classList.add("is-active");
+        item.setAttribute("aria-current", "step");
+        if (state.tone !== "active" && state.tone !== "complete") item.classList.add(`is-${state.tone}`);
+        caption = state.caption;
+      }
+      const marker = document.createElement("span");
+      marker.className = "request-step-marker";
+      marker.append(createIcon(complete ? "icon-check" : step.icon));
+      const label = document.createElement("span");
+      label.className = "request-step-label";
+      label.textContent = step.label;
+      const detail = document.createElement("small");
+      detail.textContent = caption;
+      label.append(detail);
+      item.append(marker, label);
+      progress.append(item);
+    });
+    return progress;
+  }
+
+  function buildRequestActivity(request) {
+    const activity = document.createElement("section");
+    activity.className = "request-activity";
+    const title = document.createElement("h3");
+    title.textContent = "Activity History";
+    const list = document.createElement("ol");
+    list.className = "request-activity-list";
+    request.history.forEach((entry) => {
+      const item = document.createElement("li");
+      item.className = "request-activity-item";
+      const check = document.createElement("span");
+      check.className = "request-activity-check";
+      check.append(createIcon("icon-check"));
+      const date = document.createElement("div");
+      date.className = "request-activity-date";
+      const when = formatActivityDate(entry.timestamp);
+      const dateLabel = document.createElement("strong");
+      dateLabel.textContent = when.date;
+      const time = document.createElement("time");
+      time.dateTime = entry.timestamp;
+      time.textContent = when.time;
+      date.append(dateLabel, time);
+      const text = document.createElement("p");
+      text.className = "request-activity-text";
+      text.textContent = REQUEST_ACTIVITY_TEXT[entry.action] || entry.action;
+      item.append(check, date, text);
+      list.append(item);
+    });
+    activity.append(title, list);
+    return activity;
+  }
+
+  function buildRequestDetails(request) {
+    const panel = document.createElement("div");
+    panel.className = "request-details-panel";
+    panel.id = `request-details-${request.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+    panel.dataset.detailsPanel = request.id;
+    panel.hidden = true;
+
+    const title = document.createElement("h4");
+    title.textContent = "Request Details";
+
+    const infoSection = document.createElement("section");
+    infoSection.className = "request-detail-section";
+    const infoTitle = document.createElement("h5");
+    infoTitle.textContent = "Request Information";
+    const grid = document.createElement("dl");
+    grid.className = "request-details-grid";
+    appendMeta(grid, "Student", `${request.studentName} · ${request.studentNumber}`);
+    appendMeta(grid, "Program", request.program || "Not provided");
+    appendMeta(grid, "Year level", request.yearLevel || "Not provided");
+    appendMeta(grid, "Semester", request.semester || "Not provided");
+    appendMeta(grid, "Purpose", request.purpose);
+    appendMeta(grid, "Appointment", request.appointment.display || "Not scheduled");
+    const relatedAppointment = window.PortalAppointmentService?.getByRequest(request.id);
+    appendMeta(grid, "Appointment status", relatedAppointment ? relatedAppointment.status : "Not scheduled");
+    appendMeta(grid, "Assigned staff", request.assignedStaff || "Not yet assigned");
+    appendMeta(grid, "Last updated", formatRequestDateTime(request.updatedAt));
+    requestDetailEntries(request).forEach(([label, value]) => appendMeta(grid, label, value));
+    infoSection.append(infoTitle, grid);
+
+    const historySection = document.createElement("section");
+    historySection.className = "request-detail-section";
+    const historyTitle = document.createElement("h5");
+    historyTitle.textContent = "Status History";
+    const history = document.createElement("ol");
+    history.className = "request-status-history";
+    request.history.slice().reverse().forEach((entry) => {
+      const item = document.createElement("li");
+      const head = document.createElement("div");
+      head.className = "request-status-history-head";
+      const action = document.createElement("strong");
+      action.textContent = entry.action;
+      const time = document.createElement("time");
+      time.dateTime = entry.timestamp;
+      time.textContent = formatRequestDateTime(entry.timestamp);
+      head.append(action, time);
+      const transition = document.createElement("p");
+      transition.className = "request-status-transition";
+      transition.textContent = `${entry.previousStatus || "New"} → ${entry.newStatus}`;
+      item.append(head, transition);
+      if (entry.remarks) {
+        const remarks = document.createElement("p");
+        remarks.className = "request-status-remarks";
+        remarks.textContent = entry.remarks;
+        item.append(remarks);
+      }
+      history.append(item);
+    });
+    historySection.append(historyTitle, history);
+
+    const actions = document.createElement("div");
+    actions.className = "request-detail-actions";
+    if (request.status === requestService.STATUS.CORRECTION) {
+      const form = document.createElement("form");
+      form.className = "request-correction-form";
+      form.dataset.correctionForm = "";
+      form.dataset.requestId = request.id;
+      const label = document.createElement("label");
+      label.htmlFor = `correction-${request.id}`;
+      label.textContent = "Describe the correction you made";
+      const input = document.createElement("textarea");
+      input.className = "request-correction-input";
+      input.id = `correction-${request.id}`;
+      input.rows = 2;
+      input.maxLength = 500;
+      input.required = true;
+      input.placeholder = "Example: Updated my semester and student number.";
+      const submit = document.createElement("button");
+      submit.className = "primary-button";
+      submit.type = "submit";
+      submit.textContent = "Submit corrections";
+      form.append(label, input, submit);
+      actions.append(form);
+    }
+    if (requestService.canStudentCancel(request.status)) {
+      const cancel = document.createElement("button");
+      cancel.className = "secondary-button student-request-cancel";
+      cancel.type = "button";
+      cancel.dataset.cancelRequest = request.id;
+      cancel.textContent = "Cancel request";
+      actions.append(cancel);
+    }
+
+    panel.append(title, infoSection, historySection);
+    if (actions.childElementCount) panel.append(actions);
+    return panel;
+  }
+
+  function buildRequestPickup(request, panel) {
+    const pickup = document.createElement("section");
+    pickup.className = "request-pickup";
+    const copy = document.createElement("div");
+    copy.className = "request-pickup-copy";
+    const title = document.createElement("h3");
+    title.textContent = "Pick-up Schedule";
+    const text = document.createElement("p");
+    if (request.status === requestService.STATUS.READY) {
+      text.textContent = request.appointment.display
+        ? `Your document is ready for pick-up. Scheduled on ${request.appointment.display}.`
+        : "Your document is ready for pick-up. Please contact the academic services office for your schedule.";
+    } else if (request.status === requestService.STATUS.RELEASED) {
+      text.textContent = "Your document has been released. Thank you for using the academic services portal.";
+    } else if ([requestService.STATUS.REJECTED, requestService.STATUS.CANCELLED].includes(request.status)) {
+      text.textContent = "No pick-up is scheduled for this request.";
+    } else {
+      text.textContent = "Your pickup schedule will appear here once your document is ready.";
+    }
+    copy.append(title, text);
+
+    const toggle = document.createElement("button");
+    toggle.className = "request-details-button";
+    toggle.type = "button";
+    toggle.dataset.detailsToggle = request.id;
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-controls", panel.id);
+    const toggleLabel = document.createElement("span");
+    toggleLabel.className = "request-details-toggle-label";
+    toggleLabel.textContent = "View Request Details";
+    toggle.append(createIcon("icon-document"), toggleLabel);
+
+    pickup.append(createIcon("icon-calendar", "portal-icon request-pickup-icon"), copy, toggle);
+    return pickup;
+  }
+
+  function displayRequestStatus(status) {
+    const labels = {
+      [requestService.STATUS.PENDING]: "Pending Review",
+      [requestService.STATUS.CORRECTION]: "Needs Correction",
+      [requestService.STATUS.APPROVED]: "Under Verification",
+      [requestService.STATUS.REJECTED]: "Rejected",
+      [requestService.STATUS.PROCESSING]: "Processing",
+      [requestService.STATUS.READY]: "Ready for Pick-up",
+      [requestService.STATUS.RELEASED]: "Claimed",
+      [requestService.STATUS.CANCELLED]: "Cancelled",
+    };
+    return labels[status] || status;
+  }
+
+  function openRequestDetail(requestId) {
+    selectedRequestId = requestId;
+    renderRequests();
+    document.querySelector("#requests-title").focus({ preventScroll: true });
+  }
+
+  function closeRequestDetail() {
+    selectedRequestId = "";
+    renderRequests();
+    document.querySelector("#requests-title").focus({ preventScroll: true });
+  }
+
+  function buildRequestListCard(request) {
+    const card = document.createElement("article");
+    card.className = "student-request-card student-request-list-card";
+    card.dataset.requestId = request.id;
+
+    const head = document.createElement("div");
+    head.className = "student-request-list-card-head";
+    const copy = document.createElement("div");
+    copy.className = "student-request-list-copy";
+    const title = document.createElement("h3");
+    title.textContent = requestTitle(request);
+    const reference = document.createElement("p");
+    reference.className = "student-request-summary-id";
+    reference.textContent = `Request ID: ${request.id}`;
+    copy.append(title, reference);
+    const status = document.createElement("span");
+    status.className = `request-status-pill request-status-${requestService.statusTone(request.status)}`;
+    status.append(createIcon(requestStatusIcon(request.status)), document.createTextNode(displayRequestStatus(request.status)));
+    head.append(copy, status);
+
+    const submitted = document.createElement("p");
+    submitted.className = "student-request-list-meta";
+    submitted.textContent = `Submitted on ${formatRequestDate(request.submittedAt)}`;
+
+    const actions = document.createElement("div");
+    actions.className = "student-request-list-actions";
+    const openButton = document.createElement("button");
+    openButton.type = "button";
+    openButton.className = "secondary-button student-request-open";
+    openButton.dataset.requestOpen = request.id;
+    openButton.textContent = "View Progress";
+    actions.append(openButton);
+
+    card.append(head, submitted, actions);
+    return card;
+  }
+
+  function buildRequestDetail(request) {
+    const detail = document.createElement("article");
+    detail.className = "student-request-card student-request-detail";
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "secondary-button student-request-back";
+    back.dataset.requestBack = "";
+    back.textContent = "Back to My Requests";
+    const summary = buildRequestSummary(request);
+    const messages = buildRequestMessages(request);
+    if (messages) detail.append(messages);
+    const progress = buildRequestProgress(request);
+    const activity = buildRequestActivity(request);
+    const panel = buildRequestDetails(request);
+    const pickup = buildRequestPickup(request, panel);
+    detail.append(back, summary, progress, activity, pickup, panel);
+    return detail;
+  }
+
   function renderRequests() {
-    const list = document.querySelector("#request-list");
-    list.replaceChildren();
-    if (!requests.length) {
-      const heading = document.createElement("h3");
-      heading.textContent = "No requests yet";
-      const description = document.createElement("p");
-      description.textContent = "Your document requests will appear here.";
-      list.append(heading, description);
+    const list = activeAccount ? requestService.listForStudent(activeAccount.accountNumber) : [];
+    if (selectedRequestId) {
+      const request = requestService.get(selectedRequestId);
+      requestEmpty.hidden = true;
+      requestList.replaceChildren();
+      if (!request) {
+        selectedRequestId = "";
+        return renderRequests();
+      }
+      requestList.append(buildRequestDetail(request));
       return;
     }
-    requests.forEach((request) => {
-      const entry = document.createElement("article");
-      entry.className = "request-entry";
-      const details = document.createElement("div");
-      const title = document.createElement("h3");
-      title.textContent = request.document;
-      const description = document.createElement("p");
-      description.textContent = `${request.id} · ${request.purpose}`;
-      const badge = document.createElement("span");
-      badge.className = "request-badge";
-      badge.textContent = "Demo draft · Not submitted";
-      details.append(title, description);
-      if (request.details) {
-        const extra = document.createElement("details");
-        extra.className = "request-details";
-        const summary = document.createElement("summary");
-        summary.textContent = "View request details";
-        const fields = document.createElement("dl");
-        const labels = { studentNumber: "Student Number", fullName: "Full Name", program: "Program", yearLevel: "Year Level", semester: "Semester", academicYear: "Academic Year", requestedSemester: "Requested Semester", appointmentDate: "Appointment Date", appointmentTimeRange: "Appointment Time", copies: "Copies", notes: "Additional Notes" };
-        Object.entries(labels).forEach(([key, label]) => {
-          if (!request.details[key]) return;
-          const field = document.createElement("div");
-          const term = document.createElement("dt");
-          term.textContent = label;
-          const value = document.createElement("dd");
-          value.textContent = String(key === "appointmentDate" && request.details.appointmentDateLabel ? request.details.appointmentDateLabel : request.details[key]);
-          field.append(term, value);
-          fields.append(field);
-        });
-        extra.append(summary, fields);
-        details.append(extra);
-      }
-      entry.append(details, badge);
-      list.append(entry);
+    requestEmpty.hidden = list.length > 0;
+    requestList.replaceChildren();
+    list.forEach((request) => {
+      requestList.append(buildRequestListCard(request));
     });
   }
 
   function createRequest({ document: documentName, purpose, details } = {}, { nextPage = "requests", notify = true } = {}) {
-    if (!activeAccount || typeof documentName !== "string" || !documentName.trim() || typeof purpose !== "string" || !purpose.trim()) return null;
-    const request = {
-      id: `DEMO-${String(requests.length + 1).padStart(3, "0")}`,
-      document: documentName.trim(),
-      purpose: purpose.trim(),
-      ...(details && typeof details === "object" ? { details: { ...details } } : {}),
-    };
-    requests.unshift(request);
+    if (!activeAccount) return null;
+    const request = requestService.create({ student: activeAccount, document: documentName, purpose, details });
+    if (!request) return null;
     renderRequests();
     navigate(Object.hasOwn(routes, nextPage) ? nextPage : "requests");
-    if (notify) document.dispatchEvent(new CustomEvent("portal:requestcreated", { detail: request.document }));
+    if (notify) document.dispatchEvent(new CustomEvent("portal:requestcreated", { detail: request.documentType }));
     return request;
   }
 
@@ -485,13 +947,113 @@ window.initializePortalDashboard = () => {
     if (request) requestDialog.close();
   });
 
+  requestList.addEventListener("click", (event) => {
+    const back = event.target.closest("[data-request-back]");
+    if (back) {
+      event.preventDefault();
+      closeRequestDetail();
+      return;
+    }
+    const openButton = event.target.closest("[data-request-open]");
+    if (openButton) {
+      event.preventDefault();
+      openRequestDetail(openButton.dataset.requestOpen);
+      return;
+    }
+    const detailsToggle = event.target.closest("[data-details-toggle]");
+    if (detailsToggle) {
+      const panel = detailsToggle.closest(".student-request-card")?.querySelector("[data-details-panel]");
+      if (!panel) return;
+      const open = panel.hidden;
+      panel.hidden = !open;
+      detailsToggle.setAttribute("aria-expanded", String(open));
+      const label = detailsToggle.querySelector(".request-details-toggle-label");
+      if (label) label.textContent = open ? "Hide Request Details" : "View Request Details";
+      return;
+    }
+    const cancel = event.target.closest("[data-cancel-request]");
+    if (!cancel || !activeAccount) return;
+    const request = requestService.getForStudent(cancel.dataset.cancelRequest, activeAccount.accountNumber);
+    if (!request || !requestService.canStudentCancel(request.status)) return;
+    activeRequestId = request.id;
+    requestCancelDocument.textContent = `${request.documentType} (${request.id})`;
+    requestCancelForm.reset();
+    requestCancelStatus.textContent = "";
+    requestCancelStatus.classList.remove("is-error");
+    requestCancelReason.setCustomValidity("");
+    requestCancelDialog.showModal();
+    requestCancelReason.focus();
+  });
+
+  requestList.addEventListener("submit", (event) => {
+    const form = event.target.closest("[data-correction-form]");
+    if (!form || !activeAccount) return;
+    event.preventDefault();
+    const input = form.querySelector("textarea");
+    const note = input.value.trim();
+    if (!note) {
+      input.setCustomValidity("Describe the correction before resubmitting.");
+      input.reportValidity();
+      return;
+    }
+    input.setCustomValidity("");
+    try {
+      requestService.studentResubmit(form.dataset.requestId, activeAccount, note);
+      setRequestFeedback("Corrections submitted. Your request is back in Pending Review.");
+      renderRequests();
+      document.querySelector("#requests-title").focus({ preventScroll: true });
+    } catch (error) {
+      setRequestFeedback(error.message, true);
+      input.focus();
+    }
+  });
+
+  requestCancelReason.addEventListener("input", () => {
+    requestCancelReason.setCustomValidity("");
+    requestCancelStatus.textContent = "";
+    requestCancelStatus.classList.remove("is-error");
+  });
+
+  requestCancelForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!activeAccount || !activeRequestId) return;
+    const reason = requestCancelReason.value.trim();
+    if (!reason) {
+      requestCancelReason.setCustomValidity("Enter a reason before cancelling this request.");
+      requestCancelReason.reportValidity();
+      return;
+    }
+    requestCancelSubmit.disabled = true;
+    try {
+      requestService.studentCancel(activeRequestId, activeAccount, reason);
+      requestCancelDialog.close();
+      setRequestFeedback("Request cancelled. The record remains in your request history.");
+      renderRequests();
+      document.querySelector("#requests-title").focus({ preventScroll: true });
+    } catch (error) {
+      requestCancelStatus.textContent = error.message;
+      requestCancelStatus.classList.add("is-error");
+    } finally {
+      requestCancelSubmit.disabled = false;
+    }
+  });
+
+  requestCancelDialog.addEventListener("close", () => {
+    activeRequestId = "";
+    requestCancelForm.reset();
+    requestCancelStatus.textContent = "";
+    requestCancelStatus.classList.remove("is-error");
+    requestCancelReason.setCustomValidity("");
+  });
+
   function assistantAnswer(question) {
     const normalized = question.trim().toLowerCase();
+    const studentRequests = activeAccount ? requestService.listForStudent(activeAccount.accountNumber) : [];
     let answer;
     if (/status|track|my request/.test(normalized)) {
-      answer = requests.length
-        ? `You have ${requests.length} demo request${requests.length === 1 ? "" : "s"} in My Request. These are local drafts and have not been submitted to the registrar. Open My Request to review them.`
-        : "You have no requests in this session yet. Open Services to create a document request preview, then check My Request. Official processing status will be available when the portal is connected to the registrar.";
+      answer = studentRequests.length
+        ? `You have ${studentRequests.length} browser-local demo request${studentRequests.length === 1 ? "" : "s"} in My Request. Open My Request to check each status, appointment, staff remarks, and status history. These are not official registrar submissions.`
+        : "You have no requests in this browser yet. Open Services or Academic Records to create a document request, then check My Request for its Pending Review status. Official processing status will be available when the portal is connected to the registrar.";
     } else if (/gradeslip|grade slip|grades/.test(normalized)) {
       answer = "Open Services and choose Grade Slip. Complete Personal Information and Grade Slip Details, then review and submit your demo request. It will appear in My Request. Contact the registrar to confirm official requirements, fees, and release schedules.";
     } else if (/id printing|student id/.test(normalized)) {
@@ -526,6 +1088,14 @@ window.initializePortalDashboard = () => {
     navigate("services");
   });
 
+  document.addEventListener("portal:requestschanged", () => {
+    if (activeAccount?.role === "student") renderRequests();
+  });
+
+  document.addEventListener("portal:appointmentschanged", () => {
+    if (activeAccount?.role === "student") renderRequests();
+  });
+
   window.PortalProfile = Object.freeze({
     snapshot: profileSnapshot,
     update(values) {
@@ -550,5 +1120,5 @@ window.initializePortalDashboard = () => {
   window.PortalAssistant = Object.freeze({ answer: assistantAnswer });
 
   const savedAccount = accounts.restoreSession();
-  if (savedAccount) openDashboard(savedAccount);
+  if (savedAccount?.role === "student") openDashboard(savedAccount);
 };

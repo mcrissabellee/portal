@@ -2,6 +2,7 @@
 
 (() => {
   const accountsKey = "rtu.portal.accounts";
+  const staffCredentialsKey = "rtu.portal.staffCredentials";
   const sessionKey = "rtu.portal.session";
   const demoAccount = {
     role: "student",
@@ -14,6 +15,21 @@
     semester: "1st Semester",
     address: "",
   };
+  const staffAccounts = Object.freeze([
+    Object.freeze({
+      role: "staff",
+      accountNumber: "2020-123456",
+      fullName: "Crissabelle Veloso",
+      email: "cheezyyummy@gmail.com",
+      phoneNumber: "",
+      position: "Academic Services Staff",
+      department: "Office of the Registrar",
+      officeLocation: "RTU Pasig Campus - Registrar's Office",
+      officeHours: "Monday to Friday, 8:00 AM - 5:00 PM",
+      passwordSalt: "fd10c6b26633ca40c5204cf81764e1b4",
+      passwordHash: "e9af2bf280b00496306552133520635f09b8982e1c9076fb073037cf492237bc",
+    }),
+  ]);
 
   function readAccounts() {
     let accounts;
@@ -33,6 +49,27 @@
     return accounts;
   }
 
+  function readStaffCredentials() {
+    let credentials;
+    try {
+      credentials = JSON.parse(window.localStorage.getItem(staffCredentialsKey) || "{}");
+    } catch {
+      return {};
+    }
+    return credentials && typeof credentials === "object" && !Array.isArray(credentials) ? credentials : {};
+  }
+
+  function staffRecords() {
+    const credentials = readStaffCredentials();
+    return staffAccounts.map((account) => {
+      const replacement = credentials[account.accountNumber];
+      if (replacement && /^[a-f\d]{32}$/.test(replacement.passwordSalt) && /^[a-f\d]{64}$/.test(replacement.passwordHash)) {
+        return { ...account, passwordSalt: replacement.passwordSalt, passwordHash: replacement.passwordHash };
+      }
+      return { ...account };
+    });
+  }
+
   function publicAccount(account) {
     return {
       role: "student",
@@ -47,10 +84,41 @@
     };
   }
 
-  function findAccount(accountNumber) {
+  function publicStaffAccount(account) {
+    return {
+      role: "staff",
+      accountNumber: account.accountNumber,
+      fullName: account.fullName,
+      email: account.email,
+      phoneNumber: account.phoneNumber || "",
+      position: account.position || "",
+      department: account.department || "",
+      officeLocation: account.officeLocation || "",
+      officeHours: account.officeHours || "",
+    };
+  }
+
+  function findAccount(accountNumber, role = "student") {
+    if (role === "staff") {
+      const account = staffRecords().find((entry) => entry.accountNumber === accountNumber);
+      return account ? publicStaffAccount(account) : null;
+    }
     const account = readAccounts().find((entry) => entry.accountNumber === accountNumber);
     if (account && accountNumber === demoAccount.accountNumber) return { ...demoAccount };
     return account ? publicAccount(account) : null;
+  }
+
+  function listStudents() {
+    let students = [];
+    try {
+      students = readAccounts().map(publicAccount);
+    } catch {
+      students = [];
+    }
+    if (!students.some((account) => account.accountNumber === demoAccount.accountNumber)) {
+      students.unshift({ ...demoAccount });
+    }
+    return students;
   }
 
   function toHex(bytes) {
@@ -97,21 +165,36 @@
     return publicAccount(account);
   }
 
-  async function authenticate(accountNumber, password) {
+  async function authenticate(accountNumber, password, role = "student") {
     accountNumber = accountNumber.trim();
+    if (role === "staff") {
+      const account = staffRecords().find((entry) => entry.accountNumber === accountNumber);
+      if (!account || await hashPassword(password, account.passwordSalt) !== account.passwordHash) return null;
+      return publicStaffAccount(account);
+    }
     const account = readAccounts().find((entry) => entry.accountNumber === accountNumber);
     if (!account || await hashPassword(password, account.passwordSalt) !== account.passwordHash) return null;
     if (accountNumber === demoAccount.accountNumber) return { ...demoAccount };
     return publicAccount(account);
   }
 
-  async function changePassword(accountNumber, currentPassword, newPassword) {
+  async function changePassword(accountNumber, currentPassword, newPassword, role = "student") {
     if (newPassword.length < 8) throw new Error("Use at least 8 characters for your new password.");
     if (newPassword === currentPassword) throw new Error("Choose a new password different from your current password.");
-    const account = await authenticate(accountNumber, currentPassword);
+    const account = await authenticate(accountNumber, currentPassword, role);
     if (!account) throw new Error("Your current password is incorrect.");
     const passwordSalt = toHex(window.crypto.getRandomValues(new Uint8Array(16)));
     const passwordHash = await hashPassword(newPassword, passwordSalt);
+    if (role === "staff") {
+      const credentials = readStaffCredentials();
+      credentials[accountNumber] = { passwordSalt, passwordHash };
+      try {
+        window.localStorage.setItem(staffCredentialsKey, JSON.stringify(credentials));
+      } catch {
+        throw new Error("Your password could not be saved. Browser storage is unavailable or full.");
+      }
+      return;
+    }
     const accounts = readAccounts();
     const index = accounts.findIndex((entry) => entry.accountNumber === accountNumber);
     if (index === -1 && accountNumber !== demoAccount.accountNumber) throw new Error("This demo account could not be found.");
@@ -136,7 +219,7 @@
       // Use the default session behavior when preferences cannot be read.
     }
     try {
-      window.sessionStorage.setItem(sessionKey, `student:${account.accountNumber}`);
+      window.sessionStorage.setItem(sessionKey, `${account.role === "staff" ? "staff" : "student"}:${account.accountNumber}`);
     } catch {
       // Sign-in still works for this visit when session storage is unavailable.
     }
@@ -145,7 +228,13 @@
   function restoreSession() {
     try {
       const session = window.sessionStorage.getItem(sessionKey);
-      return session?.startsWith("student:") ? findAccount(session.slice(8)) : null;
+      if (!session) return null;
+      const separator = session.indexOf(":");
+      if (separator < 0) return null;
+      const role = session.slice(0, separator);
+      const accountNumber = session.slice(separator + 1);
+      if (!accountNumber || (role !== "student" && role !== "staff")) return null;
+      return findAccount(accountNumber, role);
     } catch {
       return null;
     }
@@ -159,5 +248,13 @@
     }
   }
 
-  window.PortalAccounts = Object.freeze({ register, authenticate, changePassword, saveSession, restoreSession, clearSession });
+  window.PortalAccounts = Object.freeze({
+    register,
+    authenticate,
+    changePassword,
+    saveSession,
+    restoreSession,
+    clearSession,
+    listStudents,
+  });
 })();

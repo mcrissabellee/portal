@@ -1,0 +1,48 @@
+<body>
+<section class="dashboard-view staff-view" data-view="staff-records" aria-labelledby="staff-records-title" hidden>
+  <header class="staff-page-heading">
+    <div><h2 id="staff-records-title" tabindex="-1">Student Records</h2><p>Look up a student, review their details, and see related requests.</p></div>
+    <span class="staff-count-pill"><strong id="staff-record-count">0</strong> students</span>
+  </header>
+
+  <section class="content-card staff-panel">
+    <div class="staff-filter-bar">
+      <label class="staff-search" for="staff-record-search">
+        <svg class="portal-icon" aria-hidden="true"><use href="#icon-search"/></svg>
+        <span class="visually-hidden">Search students</span>
+        <input id="staff-record-search" type="search" placeholder="Search name, student number, or email…" autocomplete="off">
+      </label>
+      <label class="staff-select" for="staff-record-program"><span>Program</span><select id="staff-record-program"><option value="all">All programs</option></select></label>
+    </div>
+    <div class="staff-table-wrap">
+      <table class="staff-table">
+        <thead><tr><th scope="col">Student</th><th scope="col">Student number</th><th scope="col">Program</th><th scope="col">Year level</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
+        <tbody id="staff-record-rows"></tbody>
+      </table>
+    </div>
+    <p class="staff-empty" id="staff-record-empty" hidden>No student records match your search. Try a different name, number, or program.</p>
+  </section>
+
+  <section class="content-card staff-panel staff-record-detail" id="staff-record-detail" aria-labelledby="staff-record-detail-name" hidden>
+    <header class="staff-record-heading">
+      <div>
+        <span class="staff-record-kicker" id="staff-record-detail-number">Student record</span>
+        <h3 id="staff-record-detail-name">Student name</h3>
+        <p id="staff-record-detail-program">Program</p>
+      </div>
+      <button class="staff-link-button" id="staff-record-close" type="button">Close details</button>
+    </header>
+    <dl class="staff-record-grid">
+      <div><dt>Email address</dt><dd id="staff-record-email">—</dd></div>
+      <div><dt>Phone number</dt><dd id="staff-record-phone">—</dd></div>
+      <div><dt>Academic status</dt><dd id="staff-record-status">—</dd></div>
+      <div><dt>Year level</dt><dd id="staff-record-year">—</dd></div>
+      <div><dt>Semester</dt><dd id="staff-record-semester">—</dd></div>
+      <div><dt>Record source</dt><dd id="staff-record-source">—</dd></div>
+    </dl>
+    <h4 class="staff-record-subtitle">Request history</h4>
+    <div class="staff-record-requests" id="staff-record-requests"></div>
+    <p class="staff-empty" id="staff-record-requests-empty" hidden>No demo requests are linked to this student.</p>
+  </section>
+</section>
+</body>

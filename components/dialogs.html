@@ -20,8 +20,21 @@
 <dialog class="portal-dialog" id="request-dialog" aria-labelledby="request-dialog-title">
   <div class="modal-header"><div><span class="dialog-eyebrow">ACADEMIC SERVICES</span><h2 class="modal-title" id="request-dialog-title">Request a document</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="Close dialog">&times;</button></div>
   <form id="document-request-form">
-    <div class="modal-body"><p>Create a request preview for your selected document.</p><p class="request-student"><span data-profile-name>Juan Dela Cruz</span> · <span data-profile-student-number>2023-103319</span></p><label class="form-label" for="request-purpose">Purpose of request</label><select class="dialog-input" id="request-purpose" required><option value="">Select a purpose</option><option>Enrollment</option><option>Scholarship application</option><option>Employment</option><option>Personal copy</option><option>Other</option></select><p class="demo-note">Demo only. Requests stay in this browser session and are not submitted to the registrar. Confirm document requirements and scheduling with the registrar.</p></div>
-    <div class="modal-footer"><button class="secondary-button" type="button" data-close-dialog>Cancel</button><button class="primary-button" type="submit">Create demo request</button></div>
+    <div class="modal-body"><p>Create a request for your selected document.</p><p class="request-student"><span data-profile-name>Juan Dela Cruz</span> · <span data-profile-student-number>2023-103319</span></p><label class="form-label" for="request-purpose">Purpose of request</label><select class="dialog-input" id="request-purpose" required><option value="">Select a purpose</option><option>Enrollment</option><option>Scholarship application</option><option>Employment</option><option>Personal copy</option><option>Other</option></select><p class="demo-note">Browser-local demo only. This request is saved in this browser with a Pending Review status for staff workflow testing. It is not an official registrar submission.</p></div>
+    <div class="modal-footer"><button class="secondary-button" type="button" data-close-dialog>Cancel</button><button class="primary-button" type="submit">Submit demo request</button></div>
+  </form>
+</dialog>
+
+<dialog class="portal-dialog" id="request-cancel-dialog" aria-labelledby="request-cancel-title">
+  <div class="modal-header"><div><span class="dialog-eyebrow">MY REQUEST</span><h2 class="modal-title" id="request-cancel-title">Cancel request</h2></div><button class="dialog-close" type="button" data-close-dialog aria-label="Close dialog">&times;</button></div>
+  <form id="request-cancel-form" novalidate>
+    <div class="modal-body">
+      <p>Cancel <strong id="request-cancel-document">this request</strong>? The request will remain in your history with a Cancelled status.</p>
+      <label class="form-label" for="request-cancel-reason">Reason for cancellation</label>
+      <textarea class="form-control dialog-input" id="request-cancel-reason" name="cancelReason" rows="3" maxlength="500" required></textarea>
+      <p class="dialog-status" id="request-cancel-status" role="status" aria-live="polite"></p>
+    </div>
+    <div class="modal-footer"><button class="secondary-button" type="button" data-close-dialog>Keep request</button><button class="btn danger-button" type="submit" id="request-cancel-submit">Cancel request</button></div>
   </form>
 </dialog>
 

@@ -1,0 +1,65 @@
+<body>
+<section class="dashboard-view settings-view staff-settings-view" data-view="staff-settings" aria-labelledby="staff-settings-title" hidden>
+  <h2 id="staff-settings-title" tabindex="-1"><svg class="portal-icon" aria-hidden="true"><use href="#icon-settings"/></svg>Settings</h2>
+  <div class="settings-layout">
+    <div class="settings-menu" role="tablist" aria-label="Staff settings sections" aria-orientation="vertical">
+      <button class="settings-tab" id="staff-settings-tab-account" type="button" role="tab" aria-selected="true" aria-controls="staff-settings-panel-account" data-staff-settings-tab="account">Account Information</button>
+      <button class="settings-tab" id="staff-settings-tab-password" type="button" role="tab" aria-selected="false" aria-controls="staff-settings-panel-password" tabindex="-1" data-staff-settings-tab="password">Change Password</button>
+      <button class="settings-tab" id="staff-settings-tab-notifications" type="button" role="tab" aria-selected="false" aria-controls="staff-settings-panel-notifications" tabindex="-1" data-staff-settings-tab="notifications">Notification Settings</button>
+      <button class="settings-tab" id="staff-settings-tab-privacy" type="button" role="tab" aria-selected="false" aria-controls="staff-settings-panel-privacy" tabindex="-1" data-staff-settings-tab="privacy">Privacy and Security</button>
+    </div>
+    <div class="settings-workspace">
+      <section class="settings-panel" id="staff-settings-panel-account" role="tabpanel" aria-labelledby="staff-settings-tab-account" data-staff-settings-panel="account">
+        <div class="settings-panel-heading"><h3>Account Information</h3><button class="settings-edit-button" id="staff-settings-edit-button" type="button" data-page="staff-profile"><span>Edit Info</span><svg class="portal-icon" aria-hidden="true"><use href="#icon-pencil"/></svg></button></div>
+        <p class="settings-description">Your employee details are managed in My Profile. The employee number is your staff sign-in identifier.</p>
+        <dl class="staff-settings-summary">
+          <div><dt>Staff Name</dt><dd data-staff-value="fullName">Crissabelle Veloso</dd></div>
+          <div><dt>Employee ID</dt><dd data-staff-value="employeeNumber">2020-123456</dd></div>
+          <div><dt>Email Address</dt><dd data-staff-value="email">cheezyyummy@gmail.com</dd></div>
+          <div><dt>Position</dt><dd data-staff-value="position">Academic Services Staff</dd></div>
+          <div><dt>Department</dt><dd data-staff-value="department">Office of the Registrar</dd></div>
+          <div><dt>Office Location</dt><dd data-staff-value="officeLocation">RTU Pasig Campus - Registrar's Office</dd></div>
+          <div><dt>Office Hours</dt><dd data-staff-value="officeHours">Monday to Friday, 8:00 AM - 5:00 PM</dd></div>
+          <div><dt>Phone Number</dt><dd data-staff-value="phoneNumber">Not provided</dd></div>
+        </dl>
+      </section>
+
+      <section class="settings-panel" id="staff-settings-panel-password" role="tabpanel" aria-labelledby="staff-settings-tab-password" data-staff-settings-panel="password" hidden>
+        <h3>Change Password</h3><p class="settings-description">Update the password you use to sign in to your staff account.</p>
+        <form class="settings-password-form" id="staff-change-password-form" novalidate>
+          <div class="settings-form-field"><label for="staff-password-current">Current password</label><div class="settings-password-input"><input id="staff-password-current" name="currentPassword" type="password" autocomplete="current-password" required aria-describedby="staff-password-status"><button class="settings-password-toggle" type="button" data-staff-password-toggle="staff-password-current" aria-controls="staff-password-current" aria-label="Show current password" aria-pressed="false"><svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-eye"/><path class="eye-slash" d="m3 21 18-18"/></svg></button></div></div>
+          <div class="settings-form-field"><label for="staff-password-new">New password</label><div class="settings-password-input"><input id="staff-password-new" name="newPassword" type="password" autocomplete="new-password" minlength="8" required aria-describedby="staff-password-status"><button class="settings-password-toggle" type="button" data-staff-password-toggle="staff-password-new" aria-controls="staff-password-new" aria-label="Show new password" aria-pressed="false"><svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-eye"/><path class="eye-slash" d="m3 21 18-18"/></svg></button></div><small>Use at least 8 characters.</small></div>
+          <div class="settings-form-field"><label for="staff-password-confirm">Confirm new password</label><div class="settings-password-input"><input id="staff-password-confirm" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required aria-describedby="staff-password-status"><button class="settings-password-toggle" type="button" data-staff-password-toggle="staff-password-confirm" aria-controls="staff-password-confirm" aria-label="Show new password confirmation" aria-pressed="false"><svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-eye"/><path class="eye-slash" d="m3 21 18-18"/></svg></button></div></div>
+          <button class="primary-button" type="submit">Update password</button>
+          <p class="settings-feedback" id="staff-password-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="settings-panel settings-notifications-panel" id="staff-settings-panel-notifications" role="tabpanel" aria-labelledby="staff-settings-tab-notifications" data-staff-settings-panel="notifications" hidden>
+        <h3>Notification Settings</h3><p class="settings-description">Choose which staff updates you want to see.</p>
+        <form class="staff-preferences settings-notification-options" id="staff-notification-form">
+          <label class="settings-switch"><input name="requestAlerts" type="checkbox" role="switch" checked><span><strong>Request alerts</strong><small>Show the pending request count in the header.</small></span></label>
+          <label class="settings-switch"><input name="announcementAlerts" type="checkbox" role="switch" checked><span><strong>Announcement updates</strong><small>Keep announcement activity enabled for your account.</small></span></label>
+          <label class="settings-switch"><input name="shiftReminders" type="checkbox" role="switch" checked><span><strong>Office reminders</strong><small>Save reminders for document release schedules.</small></span></label>
+        </form>
+      </section>
+
+      <section class="settings-panel settings-privacy-panel" id="staff-settings-panel-privacy" role="tabpanel" aria-labelledby="staff-settings-tab-privacy" data-staff-settings-panel="privacy" hidden>
+        <h3>Privacy and Security</h3>
+        <div class="settings-policy">
+          <h4>Staff Data Access</h4>
+          <p>Staff accounts can view student information only for legitimate academic service operations. Handle student records with care, use the information solely for authorized processing, and report any suspected unauthorized access to the university data protection officer.</p>
+          <h4>How We Protect Your Information</h4>
+          <p>This demo stores staff sessions in the current browser tab and keeps provisioned credentials separate from student accounts. In a production deployment, authentication and record access must be enforced by a secure university backend.</p>
+        </div>
+        <details class="settings-session-preferences">
+          <summary>Session preferences</summary>
+          <form class="staff-preferences" id="staff-session-form"><label class="settings-switch"><span><strong>Keep me signed in on refresh</strong><small>Remember your staff sign-in in this tab until you log out.</small></span><input name="rememberSession" type="checkbox" role="switch" checked></label></form>
+          <div class="settings-session"><h4>Current account</h4><p><strong data-staff-name>Crissabelle Veloso</strong><br>Employee No: <span data-staff-employee-number>2020-123456</span></p><p>Your password changes and preferences are saved in this browser.</p><button class="secondary-button" id="staff-settings-logout-button" type="button">Log out of this tab</button></div>
+        </details>
+      </section>
+    </div>
+  </div>
+  <footer class="settings-footer"><p class="profile-save-status" id="staff-save-status" role="status" aria-live="polite" aria-atomic="true"><svg class="portal-icon" aria-hidden="true"><use href="#icon-history"/></svg><span id="staff-save-message">Auto-save ready</span></p></footer>
+</section>
+</body>

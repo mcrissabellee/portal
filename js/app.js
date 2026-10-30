@@ -2,7 +2,7 @@
 
 (() => {
   // Each hash route has one HTML view. Paths are relative to index.html.
-  const routes = Object.freeze({
+  const studentRoutes = Object.freeze({
     dashboard: { hash: "#/dashboard", file: "pages/dashboard.html" },
     services: { hash: "#/services", file: "pages/services.html" },
     "grade-slip": { hash: "#/services/grade-slip", file: "pages/grade-slip.html" },
@@ -18,8 +18,18 @@
     profile: { hash: "#/profile", file: "pages/profile.html" },
     settings: { hash: "#/settings", file: "pages/settings.html" },
   });
+  const staffRoutes = Object.freeze({
+    "staff-dashboard": { hash: "#/staff/dashboard", file: "pages/staff-dashboard.html" },
+    "staff-requests": { hash: "#/staff/requests", file: "pages/staff-requests.html" },
+    "staff-appointments": { hash: "#/staff/appointments", file: "pages/staff-appointments.html" },
+    "staff-records": { hash: "#/staff/records", file: "pages/staff-records.html" },
+    "staff-announcements": { hash: "#/staff/announcements", file: "pages/staff-announcements.html" },
+    "staff-profile": { hash: "#/staff/profile", file: "pages/staff-profile.html" },
+    "staff-settings": { hash: "#/staff/settings", file: "pages/staff-settings.html" },
+  });
   const root = document.querySelector("#portal-root");
-  window.PortalRoutes = routes;
+  window.PortalRoutes = studentRoutes;
+  window.PortalStaffRoutes = staffRoutes;
 
   async function loadMarkup(file) {
     const response = await fetch(file, { cache: "no-cache" });
@@ -31,6 +41,18 @@
     const fragment = document.createDocumentFragment();
     fragment.append(...markup.body.childNodes);
     return fragment;
+  }
+
+  async function loadViews(routeMap) {
+    return Promise.all(Object.entries(routeMap).map(async ([page, route]) => {
+      const fragment = await loadMarkup(route.file);
+      const view = fragment.firstElementChild;
+      if (fragment.children.length !== 1 || view?.dataset.view !== page || !view.querySelector("h2")) {
+        throw new Error(`The view in ${route.file} is invalid.`);
+      }
+      view.hidden = true;
+      return fragment;
+    }));
   }
 
   function showLoadError(error) {
@@ -57,24 +79,21 @@
     try {
       // Mount all views once before binding handlers. This preserves in-session
       // form state and request drafts while navigating between hash routes.
-      const [login, icons, shell, dialogs, views] = await Promise.all([
+      const [login, icons, shell, staffShell, dialogs, views, staffViews] = await Promise.all([
         loadMarkup("pages/login.html"),
         loadMarkup("components/icons.html"),
         loadMarkup("components/dashboard-shell.html"),
+        loadMarkup("components/staff-shell.html"),
         loadMarkup("components/dialogs.html"),
-        Promise.all(Object.entries(routes).map(async ([page, route]) => {
-          const fragment = await loadMarkup(route.file);
-          const view = fragment.firstElementChild;
-          if (fragment.children.length !== 1 || view?.dataset.view !== page || !view.querySelector("h2")) {
-            throw new Error(`The view in ${route.file} is invalid.`);
-          }
-          view.hidden = true;
-          return fragment;
-        })),
+        loadViews(studentRoutes),
+        loadViews(staffRoutes),
       ]);
       const main = shell.querySelector("#dashboard-main");
+      const staffMain = staffShell.querySelector("#staff-main");
       const requiredComponents = [
         [shell, "#dashboard-main", "components/dashboard-shell.html"],
+        [staffShell, "#staff-screen", "components/staff-shell.html"],
+        [staffShell, "#staff-main", "components/staff-shell.html"],
         [login, "#login-form", "pages/login.html"],
         [dialogs, "#register-dialog", "components/dialogs.html"],
         [icons, "#icon-home", "components/icons.html"],
@@ -83,11 +102,15 @@
         if (!fragment.querySelector(selector)) throw new Error(`Missing ${selector} in ${file}.`);
       });
       views.forEach((view) => main.append(view));
-      root.replaceChildren(login, icons, shell, dialogs);
+      staffViews.forEach((view) => staffMain.append(view));
+      root.replaceChildren(login, icons, shell, staffShell, dialogs);
       window.PortalMotion.initialize();
       window.initializePortalLogin();
       window.initializePortalDashboard();
       window.initializePortalSettings();
+      window.initializeStaffDashboard();
+      window.initializeStaffRequests();
+      window.initializeStaffAppointments();
       window.initializeGradeSlip();
       window.initializeIdPrinting();
       window.initializeRegistrationForm();
