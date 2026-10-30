@@ -84,6 +84,7 @@
       });
       views.forEach((view) => main.append(view));
       root.replaceChildren(login, icons, shell, dialogs);
+      window.PortalMotion.initialize();
       window.initializePortalLogin();
       window.initializePortalDashboard();
       window.initializePortalSettings();

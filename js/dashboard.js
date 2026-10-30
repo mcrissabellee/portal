@@ -238,7 +238,7 @@ window.initializePortalDashboard = () => {
 
   function setServicesExpanded(open) {
     servicesToggle.setAttribute("aria-expanded", String(open));
-    servicesSubmenu.hidden = !open;
+    window.PortalMotion.disclose(servicesSubmenu, open);
   }
 
   servicesToggle.addEventListener("click", () => {
@@ -250,7 +250,7 @@ window.initializePortalDashboard = () => {
       document.dispatchEvent(new Event("portal:layoutchange"));
       return;
     }
-    setServicesExpanded(servicesSubmenu.hidden);
+    setServicesExpanded(servicesToggle.getAttribute("aria-expanded") !== "true");
   });
   servicesGroup.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !servicesSubmenu.hidden) {
@@ -262,14 +262,14 @@ window.initializePortalDashboard = () => {
   });
 
   function closeAccountDropdown() {
-    accountOptions.hidden = true;
+    window.PortalMotion.swap([accountOptions], null);
     accountToggle.setAttribute("aria-expanded", "false");
   }
 
   accountToggle.addEventListener("click", () => {
     const open = accountOptions.hidden;
     closeNavigation();
-    accountOptions.hidden = !open;
+    window.PortalMotion.swap([accountOptions], open ? accountOptions : null);
     accountToggle.setAttribute("aria-expanded", String(open));
   });
   document.addEventListener("click", (event) => {
@@ -291,9 +291,7 @@ window.initializePortalDashboard = () => {
     if (!view) return;
     dashboardScreen.dataset.currentPage = page;
     if (["profile", "settings"].includes(page) && profileSaveTimer === undefined && !profileStatus.classList.contains("is-error")) showProfileSavedTime();
-    document.querySelectorAll("[data-view]").forEach((section) => {
-      section.hidden = section !== view;
-    });
+    window.PortalMotion.swap(document.querySelectorAll("[data-view]"), view);
     document.querySelectorAll(".dashboard-nav [data-page], .account-options [data-page]").forEach((button) => {
       const active = button.dataset.page === page;
       button.classList.toggle("is-active", active);
@@ -356,6 +354,11 @@ window.initializePortalDashboard = () => {
     button.addEventListener("click", (event) => {
       if (button.matches("a") && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)) return;
       event.preventDefault();
+      if (sidebar.contains(button)) {
+        desktopSidebarOpen = false;
+        closeNavigation();
+        document.dispatchEvent(new Event("portal:layoutchange"));
+      }
       navigate(button.dataset.page);
     });
   });
@@ -401,6 +404,7 @@ window.initializePortalDashboard = () => {
     document.querySelector("#account-number").focus();
     window.scrollTo(0, 0);
     document.dispatchEvent(new Event("portal:logout"));
+    window.PortalMotion.enter(loginScreen.querySelector(".login-content"));
   });
 
   document.querySelectorAll("[data-request]").forEach((button) => {

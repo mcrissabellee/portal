@@ -198,9 +198,10 @@ window.initializeGradeSlip = () => {
   }
 
   function showStep(step, focus = false, save = true) {
+    const direction = step > currentStep ? 1 : -1;
     currentStep = step;
     clearErrors();
-    panels.forEach((panel) => { panel.hidden = Number(panel.dataset.gradePanel) !== step; });
+    window.PortalMotion.swap(panels, panels.find((panel) => Number(panel.dataset.gradePanel) === step), { direction });
     stepButtons.forEach((button) => {
       const number = Number(button.dataset.gradeStep);
       button.classList.toggle("is-active", number === step);

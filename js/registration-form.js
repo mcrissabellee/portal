@@ -183,9 +183,10 @@ window.initializeRegistrationForm = () => {
   }
 
   function showStep(step, focus = false, save = true) {
+    const direction = step > currentStep ? 1 : -1;
     currentStep = step;
     clearErrors();
-    panels.forEach((panel) => { panel.hidden = Number(panel.dataset.registrationPanel) !== step; });
+    window.PortalMotion.swap(panels, panels.find((panel) => Number(panel.dataset.registrationPanel) === step), { direction });
     steps.forEach((button) => {
       const number = Number(button.dataset.registrationStep);
       button.classList.toggle("is-active", number === step);

@@ -187,9 +187,10 @@ window.initializeIdPrinting = () => {
   }
 
   function showStep(step, focus = false, save = true) {
+    const direction = step > currentStep ? 1 : -1;
     currentStep = step;
     clearErrors();
-    panels.forEach((panel) => { panel.hidden = Number(panel.dataset.idPanel) !== step; });
+    window.PortalMotion.swap(panels, panels.find((panel) => Number(panel.dataset.idPanel) === step), { direction });
     steps.forEach((button) => {
       const number = Number(button.dataset.idStep);
       button.classList.toggle("is-active", number === step);

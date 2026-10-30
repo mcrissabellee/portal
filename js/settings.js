@@ -141,7 +141,7 @@ window.initializePortalSettings = () => {
       tab.tabIndex = active ? 0 : -1;
       if (active && focus) tab.focus();
     });
-    panels.forEach((panel) => { panel.hidden = panel.dataset.settingsPanel !== name; });
+    window.PortalMotion.swap(panels, panels.find((panel) => panel.dataset.settingsPanel === name));
     if (name !== "password") resetPasswordForm();
     if (name === "account") renderAccount();
     else setStatus(name === "password" ? "Your password changes are saved in this browser." : "Preferences save automatically in this browser.");

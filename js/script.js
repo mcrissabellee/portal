@@ -62,6 +62,8 @@ window.initializePortalLogin = () => {
     setFieldError(accountInput, "");
     setFieldError(passwordInput, "");
     loginStatus.textContent = "";
+    window.PortalMotion.enter(document.querySelector(".login-heading"));
+    window.PortalMotion.enter(loginForm);
   }
 
   roleButtons.forEach((button) => {

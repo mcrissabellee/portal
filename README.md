@@ -34,6 +34,7 @@ Bootstrap loads from jsDelivr. The page also includes local styling for its core
 - Reference-style three-step ID Printing form with profile-prefilled personal information, printing schedule, request review, and account-specific draft autosave.
 - ID Printing YES/NO schedule confirmation and a dedicated Schedule Complete screen showing the confirmed date and time.
 - Collapsible RTU sidebar with an icon-only navigation rail, labeled icon tooltips, and expandable Services on desktop and mobile.
+- Shared subtle press feedback, route and form-step transitions, animated menus and dialogs, and reduced-motion support.
 - Responsive mobile navigation and document request dialogs.
 - Individual URL routes with direct links and browser Back/Forward navigation.
 - A separate HTML file for every route, plus reusable shared layout, icons, and dialogs.
@@ -71,6 +72,8 @@ css/grade-slip.css             Grade Slip multi-step form layout and theme style
 css/registration-form.css      Registration Form blue workspace and inline assistant
 css/id-printing.css            ID Printing layout using shared service-wizard styles
 css/theme.css                  Dark-mode colors for dashboard views, settings, and dialogs
+css/motion.css                 Shared interaction, sidebar, dialog, and reduced-motion styles
+js/motion.js                   Shared cancellable transitions and delegated interaction feedback
 js/accounts.js                 Saved demo accounts, password hashing, and sign-in sessions
 js/app.js                      Route-to-file map, HTML loading, and app initialization
 js/script.js                   Registration, sign-in, role switching, and account dialogs
