@@ -136,6 +136,7 @@ window.initializeGradeSlip = () => {
     programField.style.height = `${programField.scrollHeight + 2}px`;
   }
   window.addEventListener("resize", resizeProgram);
+  document.addEventListener("portal:layoutchange", resizeProgram);
 
   function setFieldValue(input, value) {
     const customSelect = personalNames.includes(input.name) || input.name === "requestedSemester" || (input.name === "academicYear" && /^\d{4}-\d{4}$/.test(value));

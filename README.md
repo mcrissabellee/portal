@@ -33,6 +33,7 @@ Bootstrap loads from jsDelivr. The page also includes local styling for its core
 - Grade Slip pick-up schedule confirmation with YES/NO actions and a dedicated Schedule Complete screen.
 - Reference-style three-step ID Printing form with profile-prefilled personal information, printing schedule, request review, and account-specific draft autosave.
 - ID Printing YES/NO schedule confirmation and a dedicated Schedule Complete screen showing the confirmed date and time.
+- Collapsible RTU sidebar with an icon-only navigation rail, labeled icon tooltips, and expandable Services on desktop and mobile.
 - Responsive mobile navigation and document request dialogs.
 - Individual URL routes with direct links and browser Back/Forward navigation.
 - A separate HTML file for every route, plus reusable shared layout, icons, and dialogs.
@@ -128,6 +129,8 @@ Each page has its own hash route and source file:
 For example, open `http://localhost:5500/#/services` and sign in to go directly to Services. Navigation updates the URL, page title, and active navigation item. Browser Back/Forward restores the matching page. Unknown routes fall back to Dashboard after sign-in. Logging out clears the current route and returns to login.
 
 Select **Services** in the sidebar to expand or collapse its **Grade Slip**, **Registration Form**, and **ID Printing** links. The active service has a gold indicator, highlighted background, and `aria-current="page"`; page headings also identify the current service. Opening a service through a direct link, refresh, browser history, the service catalog, or dashboard shortcuts automatically expands the Services menu and selects the matching item. Each service page can create a demo request that appears in **My Request**. Use **View All Services** on the dashboard or a **Services** breadcrumb to open the complete catalog. The disclosure supports Enter/Space and Escape, and service navigation also works in the mobile sidebar and dark mode.
+
+Use the **hamburger button above Dashboard** to switch between the expanded sidebar and a compact **72px icon-only rail**. The university seal, hamburger, and all six menu icons remain available when collapsed, with labels shown on hover and accessible names for screen readers. Selecting **Services** from the rail expands navigation and opens its submenu. On desktop, collapsing navigation gives the content more horizontal space without shifting it vertically, and the sidebar's open/closed state is kept while moving between pages during the current visit. On mobile, selecting a page, clicking outside, or pressing Escape closes the expanded overlay menu back to the icon rail. The button supports Enter/Space and announces whether navigation is expanded. Completion screens retain their full-width layout. Long program fields adjust when the content width changes.
 
 ### Grade Slip form
 

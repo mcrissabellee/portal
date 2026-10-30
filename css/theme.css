@@ -22,6 +22,7 @@ html[data-theme="dark"] .dashboard-shell {
   color: var(--theme-text);
 }
 html[data-theme="dark"] .dashboard-brand,
+html[data-theme="dark"] .sidebar-tools,
 html[data-theme="dark"] .dashboard-sidebar { background: #0c1830; }
 html[data-theme="dark"] .dashboard-topbar,
 html[data-theme="dark"] .icon-button,

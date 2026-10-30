@@ -463,6 +463,7 @@ window.initializeIdPrinting = () => {
   document.addEventListener("portal:beforelogout", () => { if (saveTimer !== undefined) saveDraft(); });
   document.addEventListener("portal:logout", () => loadAccount(profile.snapshot()));
   window.addEventListener("resize", resizeProgram);
+  document.addEventListener("portal:layoutchange", resizeProgram);
   window.addEventListener("pagehide", () => { if (saveTimer !== undefined) saveDraft(); });
   loadAccount(profile.snapshot());
 };

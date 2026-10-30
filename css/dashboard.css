@@ -3,7 +3,9 @@
 .portal-icon { display: inline-block; width: 32px; height: 32px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
 .dashboard-shell {
   --sidebar-width: 248px;
+  --sidebar-rail-width: 72px;
   --header-height: 88px;
+  --sidebar-tools-height: 44px;
   --dashboard-navy: #102c63;
   --dashboard-blue: #2255af;
   --dashboard-muted: #63738a;
@@ -49,7 +51,8 @@
 .account-option[aria-current="page"] .portal-icon { color: var(--dashboard-blue); }
 .account-avatar { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; overflow: hidden; border: 1px solid #dbe5f5; border-radius: 50%; background: #ecf2fc; color: #4166a5; }
 .account-avatar .portal-icon { width: 35px; height: 35px; margin-top: 9px; }
-.dashboard-sidebar { position: fixed; z-index: 2; top: var(--header-height); bottom: 0; left: 0; width: var(--sidebar-width); padding: 28px 16px; overflow-y: auto; background: #10285a; scrollbar-width: thin; scrollbar-color: #435d87 transparent; }
+.sidebar-tools { position: fixed; z-index: 2; top: var(--header-height); left: 0; display: flex; align-items: center; justify-content: flex-end; width: var(--sidebar-width); height: var(--sidebar-tools-height); padding: 4px 16px; background: #10285a; }
+.dashboard-sidebar { position: fixed; z-index: 2; top: calc(var(--header-height) + var(--sidebar-tools-height)); bottom: 0; left: 0; width: var(--sidebar-width); padding: 4px 16px 24px; overflow-y: auto; background: #10285a; scrollbar-width: thin; scrollbar-color: #435d87 transparent; visibility: visible; transform: translateX(0); transition: transform .24s ease, visibility .24s; }
 .dashboard-nav { display: flex; flex-direction: column; gap: 7px; }
 .nav-item { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 11px 15px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: #bfcce3; text-align: left; font-size: 14px; font-weight: 400; line-height: 1.4; transition: color .18s, background .18s; }
 .nav-item:hover { background: #ffffff09; color: #fff; }
@@ -66,10 +69,21 @@
 .nav-subitem:hover { background: #ffffff09; color: #fff; }
 .nav-subitem.is-active { border-color: #ffffff12; background: #ffffff14; color: #ffdc7d; font-weight: 650; box-shadow: inset 3px 0 0 var(--dashboard-gold); }
 .nav-subitem.is-active::before { background: var(--dashboard-gold); }
-.dashboard-main { min-height: calc(100svh - var(--header-height)); margin-left: var(--sidebar-width); padding: 40px 40px 56px; }
+.dashboard-main { min-height: calc(100svh - var(--header-height) - var(--sidebar-tools-height)); margin-top: var(--sidebar-tools-height); margin-left: var(--sidebar-width); padding: 40px 40px 56px; }
+.nav-label { white-space: nowrap; }
+.dashboard-shell.sidebar-collapsed .dashboard-sidebar { width: var(--sidebar-rail-width); padding: 4px 10px 24px; }
+.dashboard-shell.sidebar-collapsed .sidebar-tools { justify-content: center; width: var(--sidebar-rail-width); padding: 4px 10px; }
+.dashboard-shell.sidebar-collapsed .dashboard-brand { justify-content: center; flex: 0 0 var(--sidebar-rail-width); width: var(--sidebar-rail-width); padding: 12px; }
+.dashboard-shell.sidebar-collapsed .dashboard-brand img { width: 44px; height: 44px; }
+.dashboard-shell.sidebar-collapsed :is(.dashboard-brand > span, .nav-label, .services-chevron, .services-submenu) { display: none; }
+.dashboard-shell.sidebar-collapsed .nav-item { justify-content: center; gap: 0; padding: 11px 0; }
+.dashboard-shell.sidebar-collapsed .dashboard-main { margin-left: var(--sidebar-rail-width); }
+.dashboard-shell[data-current-page$="-complete"] .sidebar-tools { display: none; }
+.dashboard-shell[data-current-page$="-complete"] .dashboard-main { min-height: calc(100svh - var(--header-height)); margin-top: 0; }
 .dashboard-view { max-width: 1280px; margin: 0 auto; }
 .dashboard-shell :is(button, a):focus-visible { outline: 3px solid #7299df; outline-offset: 4px; }
-.dashboard-sidebar :is(button, a):focus-visible { outline-color: var(--dashboard-gold); }
+.dashboard-sidebar :is(button, a):focus-visible,
+.sidebar-tools button:focus-visible { outline-color: var(--dashboard-gold); }
 
 /* The assistant is the primary action; service shortcuts form the next tier. */
 .welcome-area { position: relative; padding: 34px 32px 30px; border: 1px solid #dfe6f2; border-radius: 20px; background: linear-gradient(110deg, #fff 35%, #f0f5ff); box-shadow: 0 4px 20px #1b376506; }
@@ -185,7 +199,10 @@
 .request-student { padding: 12px; border-radius: 8px; background: #e8eef8; color: #163e71; font-size: 14px; }
 .assistant-question-text { font-weight: 700; color: #173e70 !important; }
 .assistant-answer { padding: 18px; border-left: 3px solid #e6bb29; border-radius: 5px; background: #eaf0f8; color: #28435d; line-height: 1.7; white-space: pre-line; }
-.sidebar-toggle, .sidebar-overlay { display: none; }
+.sidebar-toggle { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 36px; padding: 4px; border: 0; border-radius: 6px; background: transparent; color: #d7e5ff; }
+.sidebar-toggle:hover { background: #ffffff14; color: #fff; }
+.sidebar-toggle .portal-icon { width: 28px; height: 28px; stroke-width: 1.8; }
+.sidebar-overlay { display: none; }
 
 /* Settings: a compact section menu beside the account workspace. */
 .dashboard-shell[data-current-page="settings"] .dashboard-main { padding: 38px 0 40px 24px; background: #fff; }
@@ -333,7 +350,8 @@
   .account-button strong { font-size: 11px; }
   .account-avatar { flex-basis: 32px; width: 32px; height: 32px; }
   .account-avatar .portal-icon { width: 29px; height: 29px; }
-  .dashboard-sidebar { padding: 24px 12px; }
+  .sidebar-tools { padding-right: 12px; }
+  .dashboard-sidebar { padding: 4px 12px 24px; }
   .nav-item { gap: 10px; padding-left: 12px; padding-right: 10px; font-size: 13px; }
   .dashboard-main { padding: 28px 24px 40px; }
   .welcome-area { padding: 26px 24px; }
@@ -363,22 +381,21 @@
 }
 @media (max-width: 700px) {
   .dashboard-shell { --header-height: 76px; --sidebar-width: 264px; }
-  .dashboard-brand { flex: 0 0 auto; justify-content: center; width: 68px; padding: 12px; }
+  .dashboard-brand { flex: 0 0 var(--sidebar-rail-width); justify-content: center; width: var(--sidebar-rail-width); padding: 12px; }
   .dashboard-brand img { width: 44px; height: 44px; }
   .dashboard-brand > span { display: none; }
   .dashboard-topbar { padding: 12px 16px; gap: 12px; }
   .dashboard-topbar h1 { font-size: 14px; line-height: 1.4; letter-spacing: -.2px; }
-  .sidebar-toggle { display: grid; }
-  .sidebar-toggle .portal-icon { width: 22px; height: 22px; }
+  .sidebar-tools { z-index: 6; width: var(--sidebar-rail-width); padding: 4px 12px; }
+  .dashboard-shell.sidebar-open .sidebar-tools { width: var(--sidebar-width); padding-right: 16px; }
   .icon-button { width: 36px; height: 36px; padding: 7px; border-radius: 9px; }
   .notification-button .portal-icon { width: 23px; height: 23px; }
   .account-button { gap: 0; max-width: none; min-width: 36px; padding: 0; border-left: 0; }
   .account-greeting, .account-chevron.portal-icon { display: none; }
-  .dashboard-sidebar { z-index: 5; padding: 24px 16px; transform: translateX(-110%); transition: transform .2s; }
-  .dashboard-shell.sidebar-open .dashboard-sidebar { transform: translateX(0); }
+  .dashboard-sidebar { z-index: 5; padding: 4px 16px 24px; }
   .nav-item { min-height: 49px; font-size: 14px; }
-  .sidebar-overlay { position: fixed; display: block; z-index: 4; inset: var(--header-height) 0 0; border: 0; background: #10264f70; backdrop-filter: blur(3px); }
-  .dashboard-main { margin-left: 0; padding: 24px 20px 40px; }
+  .sidebar-overlay { position: fixed; display: block; z-index: 4; inset: var(--header-height) 0 0 var(--sidebar-width); border: 0; background: #10264f70; backdrop-filter: blur(3px); }
+  .dashboard-main { min-height: calc(100svh - var(--header-height) - var(--sidebar-tools-height)); margin-top: var(--sidebar-tools-height); margin-left: var(--sidebar-rail-width); padding: 24px 20px 40px; }
   .welcome-area { padding: 26px 22px 22px; border-radius: 16px; }
   .welcome-area::before { top: 27px; height: 29px; }
   .welcome-area h2 { max-width: calc(100% - 76px); font-size: 28px; letter-spacing: -.9px; }
@@ -452,4 +469,8 @@
 @media (max-width: 380px) {
   .dashboard-topbar { gap: 6px; padding-top: 10px; padding-bottom: 10px; }
   .dashboard-topbar h1 { font-size: 11px; line-height: 1.2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-sidebar { transition: none; }
 }

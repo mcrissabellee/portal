@@ -26,12 +26,15 @@ window.initializePortalDashboard = () => {
   const profileInputs = [...profileForm.querySelectorAll("[data-profile-editable]")];
   const requests = [];
   const routes = Object.fromEntries(Object.entries(window.PortalRoutes).map(([page, route]) => [page, route.hash]));
+  const completionPages = new Set(Object.keys(routes).filter((page) => page.endsWith("-complete")));
   let selectedDocument = "";
   let profileSaveTimer;
   let profileUpdatedAt = null;
   let activeAccount = null;
   let profileStorageKey = "";
   let profileEditing = false;
+  let desktopSidebarOpen = true;
+  let mobileSidebarOpen = false;
 
   function setProfileStatus(message, error = false) {
     profileMessage.textContent = message;
@@ -209,12 +212,25 @@ window.initializePortalDashboard = () => {
     if (profileSaveTimer !== undefined) saveProfile();
   });
 
+  function syncNavigation() {
+    const available = !completionPages.has(dashboardScreen.dataset.currentPage);
+    const mobile = mobileNavigation.matches;
+    const open = available && (mobile ? mobileSidebarOpen : desktopSidebarOpen);
+    dashboardScreen.classList.toggle("sidebar-open", mobile && open);
+    dashboardScreen.classList.toggle("sidebar-collapsed", !open);
+    const label = open ? "Collapse navigation" : "Expand navigation";
+    sidebarToggle.setAttribute("aria-expanded", String(open));
+    sidebarToggle.setAttribute("aria-label", label);
+    sidebarToggle.title = label;
+    sidebarOverlay.hidden = !mobile || !open;
+    if (!open && servicesSubmenu.contains(document.activeElement)) sidebarToggle.focus();
+    sidebar.inert = !available;
+    if (!open) setServicesExpanded(false);
+  }
+
   function closeNavigation() {
-    dashboardScreen.classList.remove("sidebar-open");
-    sidebarToggle.setAttribute("aria-expanded", "false");
-    sidebarToggle.setAttribute("aria-label", "Open navigation");
-    sidebarOverlay.hidden = true;
-    sidebar.inert = mobileNavigation.matches;
+    mobileSidebarOpen = false;
+    syncNavigation();
   }
 
   mobileNavigation.addEventListener("change", closeNavigation);
@@ -225,7 +241,17 @@ window.initializePortalDashboard = () => {
     servicesSubmenu.hidden = !open;
   }
 
-  servicesToggle.addEventListener("click", () => setServicesExpanded(servicesSubmenu.hidden));
+  servicesToggle.addEventListener("click", () => {
+    if (dashboardScreen.classList.contains("sidebar-collapsed")) {
+      if (mobileNavigation.matches) mobileSidebarOpen = true;
+      else desktopSidebarOpen = true;
+      syncNavigation();
+      setServicesExpanded(true);
+      document.dispatchEvent(new Event("portal:layoutchange"));
+      return;
+    }
+    setServicesExpanded(servicesSubmenu.hidden);
+  });
   servicesGroup.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !servicesSubmenu.hidden) {
       event.preventDefault();
@@ -335,15 +361,17 @@ window.initializePortalDashboard = () => {
   });
 
   sidebarToggle.addEventListener("click", () => {
+    if (completionPages.has(dashboardScreen.dataset.currentPage)) return;
     closeAccountDropdown();
-    const open = !dashboardScreen.classList.contains("sidebar-open");
-    dashboardScreen.classList.toggle("sidebar-open", open);
-    sidebarToggle.setAttribute("aria-expanded", String(open));
-    sidebarToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
-    sidebarOverlay.hidden = !open;
-    sidebar.inert = !open && mobileNavigation.matches;
+    if (mobileNavigation.matches) mobileSidebarOpen = !mobileSidebarOpen;
+    else desktopSidebarOpen = !desktopSidebarOpen;
+    syncNavigation();
+    document.dispatchEvent(new Event("portal:layoutchange"));
   });
-  sidebarOverlay.addEventListener("click", closeNavigation);
+  sidebarOverlay.addEventListener("click", () => {
+    closeNavigation();
+    sidebarToggle.focus();
+  });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && dashboardScreen.classList.contains("sidebar-open")) {
       closeNavigation();
@@ -365,6 +393,7 @@ window.initializePortalDashboard = () => {
     document.querySelector("#login-form").reset();
     document.querySelector("#login-status").textContent = "";
     document.querySelector("#assistant-question").value = "";
+    desktopSidebarOpen = true;
     closeNavigation();
     closeAccountDropdown();
     window.history.replaceState(null, "", window.location.pathname + window.location.search);

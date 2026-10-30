@@ -50,6 +50,7 @@ window.initializePortalSettings = () => {
     programField.style.height = `${programField.scrollHeight + 2}px`;
   }
   window.addEventListener("resize", resizeProgram);
+  document.addEventListener("portal:layoutchange", resizeProgram);
 
   function setEditing(value) {
     editing = value;
